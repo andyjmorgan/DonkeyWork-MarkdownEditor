@@ -51,8 +51,14 @@ turndownService.addRule('codeBlock', {
     return node.nodeName === 'PRE' && node.firstChild?.nodeName === 'CODE'
   },
   replacement: (content, node) => {
+    const preElement = node as HTMLElement
     const codeElement = node.firstChild as HTMLElement
-    const language = codeElement.className.replace('language-', '') || ''
+
+    // Check for language in data-language attribute (used by mermaid) or class
+    const dataLanguage = preElement.getAttribute('data-language')
+    const classLanguage = codeElement.className.replace('language-', '')
+    const language = dataLanguage || classLanguage || ''
+
     const trimmedContent = content.replace(/\n+$/, '') // Remove trailing newlines
     return `\n\`\`\`${language}\n${trimmedContent}\n\`\`\`\n`
   },

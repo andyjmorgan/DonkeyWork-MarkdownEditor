@@ -37,10 +37,10 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
       StarterKit.configure({
         codeBlock: false, // Disable default code block
       }),
+      MermaidNode, // Must come before CustomCodeBlock to match mermaid blocks first
       CustomCodeBlock.configure({
         lowlight,
       }),
-      MermaidNode,
       Image.configure({
         inline: false,
         allowBase64: true,

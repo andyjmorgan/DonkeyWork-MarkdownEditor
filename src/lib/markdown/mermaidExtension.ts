@@ -5,6 +5,8 @@ import { MermaidDiagram } from '@/components/editor/MermaidDiagram'
 export const MermaidNode = Node.create({
   name: 'mermaid',
 
+  priority: 1000, // Higher priority than code blocks to match first
+
   group: 'block',
 
   content: 'text*',
