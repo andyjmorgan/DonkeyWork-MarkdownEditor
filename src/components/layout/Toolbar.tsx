@@ -140,13 +140,6 @@ export function Toolbar({ editor }: ToolbarProps) {
         >
           <Strikethrough className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          active={editor.isActive('code')}
-          title="Inline Code"
-        >
-          <Code className="h-4 w-4" />
-        </ToolbarButton>
       </div>
 
       {/* Link & Image */}
@@ -195,11 +188,11 @@ export function Toolbar({ editor }: ToolbarProps) {
       {/* Blocks */}
       <div className="flex items-center gap-0.5 border-r border-border px-2">
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive('blockquote')}
-          title="Blockquote"
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          active={editor.isActive('code')}
+          title="Inline Code"
         >
-          <Quote className="h-4 w-4" />
+          <Code className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -207,6 +200,13 @@ export function Toolbar({ editor }: ToolbarProps) {
           title="Code Block"
         >
           <CodeSquare className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          active={editor.isActive('blockquote')}
+          title="Blockquote"
+        >
+          <Quote className="h-4 w-4" />
         </ToolbarButton>
       </div>
 

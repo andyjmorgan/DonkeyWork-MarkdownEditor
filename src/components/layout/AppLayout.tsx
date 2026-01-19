@@ -1,6 +1,8 @@
 import { ReactNode } from 'react'
 import { TabBar } from './TabBar'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
+import { Github } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -21,7 +23,23 @@ export function AppLayout({ children, showTabs = false }: AppLayoutProps) {
             />
             <h1 className="text-xl font-semibold">Markdown Editor</h1>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+            >
+              <a
+                href="https://github.com/andyjmorgan/DonkeyWork-MarkdownEditor"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View on GitHub"
+              >
+                <Github className="h-5 w-5" />
+              </a>
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

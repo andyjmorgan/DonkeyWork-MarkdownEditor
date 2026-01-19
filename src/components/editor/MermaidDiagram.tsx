@@ -1,19 +1,14 @@
 import { NodeViewContent, NodeViewWrapper, NodeViewProps } from '@tiptap/react'
 import { useEffect, useRef, useState } from 'react'
 import mermaid from 'mermaid'
-
-// Initialize mermaid with dark theme support
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'dark',
-  securityLevel: 'loose',
-})
+import { useThemeStore } from '@/store/useThemeStore'
 
 export function MermaidDiagram({ node, updateAttributes }: NodeViewProps) {
   const [svg, setSvg] = useState<string>('')
   const [error, setError] = useState<string>('')
   const containerRef = useRef<HTMLDivElement>(null)
   const codeRef = useRef<HTMLPreElement>(null)
+  const theme = useThemeStore((state) => state.theme)
 
   useEffect(() => {
     const renderDiagram = async () => {
@@ -26,6 +21,13 @@ export function MermaidDiagram({ node, updateAttributes }: NodeViewProps) {
       }
 
       try {
+        // Initialize mermaid with current theme
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: theme === 'dark' ? 'dark' : 'default',
+          securityLevel: 'loose',
+        })
+
         // Generate unique ID for mermaid
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
 
@@ -40,17 +42,7 @@ export function MermaidDiagram({ node, updateAttributes }: NodeViewProps) {
     }
 
     renderDiagram()
-  }, [node.textContent])
-
-  // Update theme when dark mode changes
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark')
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      securityLevel: 'loose',
-    })
-  }, [])
+  }, [node.textContent, theme])
 
   return (
     <NodeViewWrapper className="mermaid-diagram-wrapper">
