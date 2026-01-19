@@ -7,26 +7,283 @@
   outline: none;
 }
 
+/* Improve list spacing */
+.ProseMirror ul:not([data-type="taskList"]),
+.ProseMirror ol {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.ProseMirror ul:not([data-type="taskList"]) li,
+.ProseMirror ol li {
+  margin-top: 0.15em;
+  margin-bottom: 0.15em;
+  line-height: 1.5;
+}
+
+/* Override Tailwind prose margins for paragraphs inside lists */
+.ProseMirror ul:not([data-type="taskList"]) li > p,
+.ProseMirror ol li > p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
 /* Task list styles */
 .ProseMirror ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
 }
 
 .ProseMirror ul[data-type="taskList"] li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
+  margin-top: 0.15em;
+  margin-bottom: 0.15em;
+  line-height: 1.5;
 }
 
 .ProseMirror ul[data-type="taskList"] li > label {
   flex: 0 0 auto;
-  margin-right: 0.5rem;
+  display: flex;
+  align-items: center;
+  margin: 0;
   user-select: none;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  cursor: pointer;
 }
 
 .ProseMirror ul[data-type="taskList"] li > div {
   flex: 1 1 auto;
+}
+
+/* Override Tailwind prose margins for paragraphs inside task lists */
+.ProseMirror ul[data-type="taskList"] li > div > p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Code block wrapper with copy button */
+.code-block-wrapper {
+  position: relative;
+  margin: 1em 0;
+}
+
+.code-block-container {
+  position: relative;
+}
+
+.code-block-copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.5rem;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--muted-foreground));
+}
+
+.code-block-container:hover .code-block-copy-button {
+  opacity: 1;
+}
+
+.code-block-copy-button:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.code-block-copy-button.copied {
+  color: #22c55e;
+  opacity: 1;
+}
+
+.code-block-copy-button.copied:hover {
+  color: #16a34a;
+}
+
+/* Code block syntax highlighting */
+.ProseMirror pre {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  padding: 1em;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.ProseMirror pre code {
+  background: none;
+  color: inherit;
+  font-size: 0.9em;
+  padding: 0;
+}
+
+/* Syntax highlighting colors for light mode */
+.ProseMirror pre .hljs-comment,
+.ProseMirror pre .hljs-quote {
+  color: #6a737d;
+  font-style: italic;
+}
+
+.ProseMirror pre .hljs-keyword,
+.ProseMirror pre .hljs-selector-tag,
+.ProseMirror pre .hljs-subst {
+  color: #d73a49;
+  font-weight: bold;
+}
+
+.ProseMirror pre .hljs-number,
+.ProseMirror pre .hljs-literal,
+.ProseMirror pre .hljs-variable,
+.ProseMirror pre .hljs-template-variable {
+  color: #005cc5;
+}
+
+.ProseMirror pre .hljs-string,
+.ProseMirror pre .hljs-doctag {
+  color: #032f62;
+}
+
+.ProseMirror pre .hljs-title,
+.ProseMirror pre .hljs-section,
+.ProseMirror pre .hljs-selector-id {
+  color: #6f42c1;
+  font-weight: bold;
+}
+
+.ProseMirror pre .hljs-type,
+.ProseMirror pre .hljs-class .hljs-title {
+  color: #22863a;
+  font-weight: bold;
+}
+
+.ProseMirror pre .hljs-tag,
+.ProseMirror pre .hljs-name,
+.ProseMirror pre .hljs-attribute {
+  color: #22863a;
+}
+
+.ProseMirror pre .hljs-regexp,
+.ProseMirror pre .hljs-link {
+  color: #032f62;
+}
+
+.ProseMirror pre .hljs-symbol,
+.ProseMirror pre .hljs-bullet {
+  color: #e36209;
+}
+
+.ProseMirror pre .hljs-built_in,
+.ProseMirror pre .hljs-builtin-name {
+  color: #005cc5;
+}
+
+.ProseMirror pre .hljs-meta {
+  color: #6a737d;
+}
+
+.ProseMirror pre .hljs-deletion {
+  background: #ffeef0;
+  color: #b31d28;
+}
+
+.ProseMirror pre .hljs-addition {
+  background: #f0fff4;
+  color: #22863a;
+}
+
+.ProseMirror pre .hljs-emphasis {
+  font-style: italic;
+}
+
+.ProseMirror pre .hljs-strong {
+  font-weight: bold;
+}
+
+/* Syntax highlighting colors for dark mode */
+.dark .ProseMirror pre .hljs-comment,
+.dark .ProseMirror pre .hljs-quote {
+  color: #8b949e;
+}
+
+.dark .ProseMirror pre .hljs-keyword,
+.dark .ProseMirror pre .hljs-selector-tag,
+.dark .ProseMirror pre .hljs-subst {
+  color: #ff7b72;
+}
+
+.dark .ProseMirror pre .hljs-number,
+.dark .ProseMirror pre .hljs-literal,
+.dark .ProseMirror pre .hljs-variable,
+.dark .ProseMirror pre .hljs-template-variable {
+  color: #79c0ff;
+}
+
+.dark .ProseMirror pre .hljs-string,
+.dark .ProseMirror pre .hljs-doctag {
+  color: #a5d6ff;
+}
+
+.dark .ProseMirror pre .hljs-title,
+.dark .ProseMirror pre .hljs-section,
+.dark .ProseMirror pre .hljs-selector-id {
+  color: #d2a8ff;
+}
+
+.dark .ProseMirror pre .hljs-type,
+.dark .ProseMirror pre .hljs-class .hljs-title {
+  color: #7ee787;
+}
+
+.dark .ProseMirror pre .hljs-tag,
+.dark .ProseMirror pre .hljs-name,
+.dark .ProseMirror pre .hljs-attribute {
+  color: #7ee787;
+}
+
+.dark .ProseMirror pre .hljs-regexp,
+.dark .ProseMirror pre .hljs-link {
+  color: #a5d6ff;
+}
+
+.dark .ProseMirror pre .hljs-symbol,
+.dark .ProseMirror pre .hljs-bullet {
+  color: #ffa657;
+}
+
+.dark .ProseMirror pre .hljs-built_in,
+.dark .ProseMirror pre .hljs-builtin-name {
+  color: #79c0ff;
+}
+
+.dark .ProseMirror pre .hljs-meta {
+  color: #8b949e;
+}
+
+.dark .ProseMirror pre .hljs-deletion {
+  background: #490202;
+  color: #ffdcd7;
+}
+
+.dark .ProseMirror pre .hljs-addition {
+  background: #0c2d0c;
+  color: #aff5b4;
 }
 
 /* Placeholder */

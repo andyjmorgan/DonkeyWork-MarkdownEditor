@@ -1,13 +1,24 @@
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { all, createLowlight } from 'lowlight'
 import { useEffect, useRef } from 'react'
 import { Toolbar } from '@/components/layout/Toolbar'
 import { htmlToMarkdown } from '@/lib/markdown/serializer'
 import { markdownToHtml } from '@/lib/markdown/parser'
+import { CodeBlockWithCopy } from './CodeBlockWithCopy'
 import './preview-editor.css'
+
+const lowlight = createLowlight(all)
+
+const CustomCodeBlock = CodeBlockLowlight.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(CodeBlockWithCopy)
+  },
+})
 
 interface PreviewEditorProps {
   content: string
@@ -21,7 +32,12 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false, // Disable default code block
+      }),
+      CustomCodeBlock.configure({
+        lowlight,
+      }),
       Underline,
       TaskList,
       TaskItem.configure({
