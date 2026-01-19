@@ -13,6 +13,7 @@ interface ImageDialogProps {
 export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogProps) {
   const [url, setUrl] = useState('')
   const [width, setWidth] = useState<string>('100')
+  const [imageError, setImageError] = useState(false)
 
   const handleInsert = () => {
     if (url.trim()) {
@@ -20,13 +21,14 @@ export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogPr
       onInsertImage(url.trim(), widthNum)
       setUrl('')
       setWidth('100')
+      setImageError(false)
       onOpenChange(false)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Insert Image</DialogTitle>
         </DialogHeader>
@@ -37,7 +39,10 @@ export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogPr
               id="image-url"
               placeholder="https://example.com/image.jpg"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => {
+                setUrl(e.target.value)
+                setImageError(false)
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleInsert()
@@ -45,6 +50,30 @@ export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogPr
               }}
             />
           </div>
+
+          {/* Image Preview */}
+          {url.trim() && (
+            <div className="space-y-2">
+              <Label>Preview</Label>
+              <div className="border rounded-lg p-4 bg-muted/30 flex items-center justify-center min-h-[200px]">
+                {imageError ? (
+                  <div className="text-sm text-muted-foreground">
+                    Failed to load image
+                  </div>
+                ) : (
+                  <img
+                    src={url}
+                    alt="Preview"
+                    style={{ width: `${width}%`, height: 'auto' }}
+                    className="max-h-[400px] object-contain rounded-md"
+                    onError={() => setImageError(true)}
+                    onLoad={() => setImageError(false)}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="image-width">Width (%)</Label>
             <div className="flex items-center gap-2">
@@ -65,10 +94,15 @@ export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogPr
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => {
+            setUrl('')
+            setWidth('100')
+            setImageError(false)
+            onOpenChange(false)
+          }}>
             Cancel
           </Button>
-          <Button onClick={handleInsert} disabled={!url.trim()}>
+          <Button onClick={handleInsert} disabled={!url.trim() || imageError}>
             Insert
           </Button>
         </DialogFooter>
