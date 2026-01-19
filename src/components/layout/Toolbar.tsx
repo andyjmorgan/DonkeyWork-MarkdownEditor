@@ -14,6 +14,7 @@ import {
   Quote,
   CodeSquare,
   Network,
+  ImagePlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -165,6 +166,18 @@ export function Toolbar({ editor }: ToolbarProps) {
           title="Mermaid Diagram"
         >
           <Network className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => {
+            const url = window.prompt('Enter image URL:')
+            if (url) {
+              editor.chain().focus().setImage({ src: url }).run()
+            }
+          }}
+          active={editor.isActive('image')}
+          title="Insert Image"
+        >
+          <ImagePlus className="h-4 w-4" />
         </ToolbarButton>
       </div>
     </div>

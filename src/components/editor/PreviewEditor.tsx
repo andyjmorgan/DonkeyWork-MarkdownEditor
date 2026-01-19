@@ -4,6 +4,7 @@ import Underline from '@tiptap/extension-underline'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Image from '@tiptap/extension-image'
 import { all, createLowlight } from 'lowlight'
 import { useEffect, useRef } from 'react'
 import { Toolbar } from '@/components/layout/Toolbar'
@@ -40,6 +41,10 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
         lowlight,
       }),
       MermaidNode,
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+      }),
       Underline,
       TaskList,
       TaskItem.configure({
