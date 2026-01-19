@@ -1,4 +1,5 @@
 import { Editor } from '@tiptap/react'
+import { useState } from 'react'
 import {
   Bold,
   Italic,
@@ -18,14 +19,24 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { ImageDialog } from '@/components/dialogs/ImageDialog'
 
 interface ToolbarProps {
   editor: Editor | null
 }
 
 export function Toolbar({ editor }: ToolbarProps) {
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false)
+
   if (!editor) {
     return null
+  }
+
+  const handleInsertImage = (url: string, width?: number) => {
+    editor.chain().focus().setImage({
+      src: url,
+      style: width ? `width: ${width}%; height: auto;` : undefined
+    }).run()
   }
 
   const ToolbarButton = ({
@@ -168,18 +179,19 @@ export function Toolbar({ editor }: ToolbarProps) {
           <Network className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => {
-            const url = window.prompt('Enter image URL:')
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run()
-            }
-          }}
+          onClick={() => setIsImageDialogOpen(true)}
           active={editor.isActive('image')}
           title="Insert Image"
         >
           <ImagePlus className="h-4 w-4" />
         </ToolbarButton>
       </div>
+
+      <ImageDialog
+        open={isImageDialogOpen}
+        onOpenChange={setIsImageDialogOpen}
+        onInsertImage={handleInsertImage}
+      />
     </div>
   )
 }
