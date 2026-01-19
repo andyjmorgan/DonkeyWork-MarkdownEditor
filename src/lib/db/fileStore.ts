@@ -4,7 +4,6 @@ import { MarkdownFile } from '@/types'
 export async function getAllFiles(): Promise<MarkdownFile[]> {
   const db = await getDB()
   const files = await db.getAll('files')
-  console.log('[fileStore] getAllFiles result:', files)
   return files
 }
 
@@ -19,9 +18,7 @@ export async function saveFile(file: MarkdownFile): Promise<void> {
     ...file,
     lastModified: Date.now(),
   }
-  console.log('[fileStore] Saving file to IndexedDB:', fileToSave)
   await db.put('files', fileToSave)
-  console.log('[fileStore] File saved successfully')
 }
 
 export async function deleteFile(id: string): Promise<void> {
