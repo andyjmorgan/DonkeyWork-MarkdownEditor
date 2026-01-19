@@ -8,6 +8,7 @@ interface FileStore {
 
   // Actions
   addFile: (file: MarkdownFile) => void
+  loadFile: (file: MarkdownFile) => void
   updateFile: (id: string, updates: Partial<MarkdownFile>) => void
   removeFile: (id: string) => void
   setActiveFile: (id: string | null) => void
@@ -31,6 +32,13 @@ export const useFileStore = create<FileStore>((set, get) => ({
         tabs: state.tabs.includes(file.id) ? state.tabs : [...state.tabs, file.id],
         activeFileId: file.id,
       }
+    }),
+
+  loadFile: (file) =>
+    set((state) => {
+      const newFiles = new Map(state.files)
+      newFiles.set(file.id, file)
+      return { files: newFiles }
     }),
 
   updateFile: (id, updates) =>

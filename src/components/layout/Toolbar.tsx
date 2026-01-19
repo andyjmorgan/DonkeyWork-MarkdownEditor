@@ -23,6 +23,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ImageDialog } from '@/components/dialogs/ImageDialog'
+import { MermaidDialog } from '@/components/dialogs/MermaidDialog'
+import { LinkDialog } from '@/components/dialogs/LinkDialog'
 
 interface ToolbarProps {
   editor: Editor | null
@@ -30,6 +32,9 @@ interface ToolbarProps {
 
 export function Toolbar({ editor }: ToolbarProps) {
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false)
+  const [isMermaidDialogOpen, setIsMermaidDialogOpen] = useState(false)
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
+  const [linkData, setLinkData] = useState({ url: '', text: '' })
 
   if (!editor) {
     return null
@@ -39,23 +44,43 @@ export function Toolbar({ editor }: ToolbarProps) {
     editor.chain().focus().setImage({ src: url }).run()
   }
 
+  const handleInsertMermaid = (code: string) => {
+    editor.chain().focus().setMermaid({ code }).run()
+  }
+
   const handleToggleLink = () => {
-    const previousUrl = editor.getAttributes('link').href
-    const url = window.prompt('Enter URL:', previousUrl)
+    const previousUrl = editor.getAttributes('link').href || ''
+    const { from, to } = editor.state.selection
+    const selectedText = editor.state.doc.textBetween(from, to, ' ')
 
-    // cancelled
-    if (url === null) {
-      return
-    }
+    setLinkData({ url: previousUrl, text: selectedText })
+    setIsLinkDialogOpen(true)
+  }
 
-    // empty
-    if (url === '') {
+  const handleInsertLink = (url: string, text: string) => {
+    if (!url) return
+
+    if (url === '' && editor.isActive('link')) {
       editor.chain().focus().extendMarkRange('link').unsetLink().run()
       return
     }
 
-    // update link
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    // If there's selected text, just add the link
+    const { from, to } = editor.state.selection
+    if (from !== to) {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    } else {
+      // If no selection, insert text with link
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'text',
+          text: text || url,
+          marks: [{ type: 'link', attrs: { href: url } }],
+        })
+        .run()
+    }
   }
 
   const ToolbarButton = ({
@@ -231,7 +256,7 @@ export function Toolbar({ editor }: ToolbarProps) {
       {/* Mermaid Diagram */}
       <div className="flex items-center gap-0.5 px-2">
         <ToolbarButton
-          onClick={() => editor.chain().focus().setMermaid().run()}
+          onClick={() => setIsMermaidDialogOpen(true)}
           active={editor.isActive('mermaid')}
           title="Mermaid Diagram"
         >
@@ -243,6 +268,18 @@ export function Toolbar({ editor }: ToolbarProps) {
         open={isImageDialogOpen}
         onOpenChange={setIsImageDialogOpen}
         onInsertImage={handleInsertImage}
+      />
+      <MermaidDialog
+        open={isMermaidDialogOpen}
+        onOpenChange={setIsMermaidDialogOpen}
+        onInsertMermaid={handleInsertMermaid}
+      />
+      <LinkDialog
+        open={isLinkDialogOpen}
+        onOpenChange={setIsLinkDialogOpen}
+        onInsertLink={handleInsertLink}
+        initialUrl={linkData.url}
+        initialText={linkData.text}
       />
     </div>
   )

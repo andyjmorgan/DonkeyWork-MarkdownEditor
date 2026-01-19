@@ -9,6 +9,7 @@ import { initDB } from '@/lib/db'
 export function useFileOperations() {
   const {
     addFile,
+    loadFile,
     updateFile,
     removeFile,
     setActiveFile,
@@ -24,9 +25,9 @@ export function useFileOperations() {
         await initDB()
         const savedFiles = await db.getAllFiles()
 
-        // Load all saved files into the store
+        // Load all saved files into the store WITHOUT opening them in tabs
         savedFiles.forEach((file) => {
-          addFile({ ...file, isDirty: false })
+          loadFile({ ...file, isDirty: false })
         })
       } catch (error) {
         console.error('Failed to load files from IndexedDB:', error)

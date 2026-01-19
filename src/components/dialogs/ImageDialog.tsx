@@ -41,82 +41,80 @@ export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Insert Image</DialogTitle>
+      <DialogContent className="sm:max-w-4xl p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle className="text-xl">Insert Image</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'url' | 'base64')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="url">URL</TabsTrigger>
-            <TabsTrigger value="base64">Base64</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="url" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="image-url">Image URL</Label>
-              <Input
-                id="image-url"
-                placeholder="https://example.com/image.jpg"
-                value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value)
-                  setImageError(false)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleInsert()
-                  }
-                }}
-              />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="base64" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="image-base64">Base64 Data URI</Label>
-              <Textarea
-                id="image-base64"
-                placeholder="data:image/png;base64,iVBORw0KGgo..."
-                value={base64}
-                onChange={(e) => {
-                  setBase64(e.target.value)
-                  setImageError(false)
-                }}
-                rows={4}
-                className="font-mono text-xs"
-              />
-              <p className="text-xs text-muted-foreground">
-                Paste a data URI starting with <code className="bg-muted px-1 py-0.5 rounded">data:image/</code>
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Image Preview */}
-        {currentImageSrc && (
-          <div className="space-y-2">
-            <Label>Preview</Label>
-            <div className="border rounded-lg p-4 bg-muted/30 flex items-center justify-center min-h-[200px]">
-              {imageError ? (
+        <div className="grid grid-cols-5 gap-4 px-6 pb-6">
+          {/* Left: Preview - Takes up 3 columns */}
+          <div className="col-span-3 flex flex-col gap-3">
+            <span className="text-sm font-medium">Preview</span>
+            <div className="border rounded-md bg-background/50 flex items-center justify-center min-h-[320px] overflow-hidden">
+              {!currentImageSrc ? (
                 <div className="text-sm text-muted-foreground">
-                  Failed to load image
+                  No preview
+                </div>
+              ) : imageError ? (
+                <div className="text-sm text-destructive">
+                  Failed to load
                 </div>
               ) : (
                 <img
                   src={currentImageSrc}
                   alt="Preview"
-                  className="max-w-full max-h-[400px] object-contain rounded-md"
+                  className="max-w-full max-h-[400px] object-contain"
                   onError={() => setImageError(true)}
                   onLoad={() => setImageError(false)}
                 />
               )}
             </div>
           </div>
-        )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleReset}>
+          {/* Right: Input - Takes up 2 columns */}
+          <div className="col-span-2 flex flex-col gap-3">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'url' | 'base64')} className="w-full">
+              <TabsList>
+                <TabsTrigger value="url">URL</TabsTrigger>
+                <TabsTrigger value="base64">Base64</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="url" className="mt-4">
+                <Input
+                  id="image-url"
+                  placeholder="https://example.com/image.jpg"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value)
+                    setImageError(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInsert()
+                    }
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="base64" className="mt-4">
+                <Textarea
+                  id="image-base64"
+                  placeholder="data:image/png;base64,..."
+                  value={base64}
+                  onChange={(e) => {
+                    setBase64(e.target.value)
+                    setImageError(false)
+                  }}
+                  rows={12}
+                  className="font-mono text-xs resize-none"
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+
+        <DialogFooter className="px-6 pb-6 pt-2 gap-2">
+          <Button variant="ghost" onClick={handleReset}>
             Cancel
           </Button>
           <Button onClick={handleInsert} disabled={!currentImageSrc || imageError}>

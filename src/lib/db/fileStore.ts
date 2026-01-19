@@ -3,7 +3,9 @@ import { MarkdownFile } from '@/types'
 
 export async function getAllFiles(): Promise<MarkdownFile[]> {
   const db = await getDB()
-  return await db.getAll('files')
+  const files = await db.getAll('files')
+  console.log('[fileStore] getAllFiles result:', files)
+  return files
 }
 
 export async function getFile(id: string): Promise<MarkdownFile | undefined> {
@@ -13,10 +15,13 @@ export async function getFile(id: string): Promise<MarkdownFile | undefined> {
 
 export async function saveFile(file: MarkdownFile): Promise<void> {
   const db = await getDB()
-  await db.put('files', {
+  const fileToSave = {
     ...file,
     lastModified: Date.now(),
-  })
+  }
+  console.log('[fileStore] Saving file to IndexedDB:', fileToSave)
+  await db.put('files', fileToSave)
+  console.log('[fileStore] File saved successfully')
 }
 
 export async function deleteFile(id: string): Promise<void> {

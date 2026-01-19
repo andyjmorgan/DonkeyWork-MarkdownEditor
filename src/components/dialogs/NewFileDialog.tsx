@@ -24,9 +24,27 @@ export function NewFileDialog({
 }: NewFileDialogProps) {
   const [fileName, setFileName] = useState('')
 
+  const sanitizeFileName = (name: string): string => {
+    // Remove .md extension if present for sanitization
+    const nameWithoutExt = name.endsWith('.md') ? name.slice(0, -3) : name
+    // Replace any character that's not a-z, A-Z, 0-9, -, or _ with a hyphen
+    const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '-')
+    // Remove consecutive hyphens
+    return sanitized.replace(/-+/g, '-').replace(/^-|-$/g, '')
+  }
+
   const handleCreate = () => {
     if (fileName.trim()) {
-      onCreateFile(fileName.trim())
+      let name = sanitizeFileName(fileName.trim())
+      if (!name) {
+        // If sanitization results in empty string, use default name
+        name = 'untitled'
+      }
+      // Append .md if not already present
+      if (!name.endsWith('.md')) {
+        name = `${name}.md`
+      }
+      onCreateFile(name)
       setFileName('')
       onOpenChange(false)
     }
@@ -41,30 +59,28 @@ export function NewFileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create New File</DialogTitle>
-          <DialogDescription>
-            Enter a name for your new markdown file.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-md p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle className="text-xl">New File</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="filename">File name</Label>
-            <Input
-              id="filename"
-              placeholder="my-document"
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoFocus
-            />
-          </div>
+        <div className="px-6 pb-6">
+          <Input
+            id="filename"
+            placeholder="untitled"
+            value={fileName}
+            onChange={(e) => setFileName(e.target.value)}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            className="text-base h-11"
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            .md extension will be added automatically
+          </p>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="px-6 pb-6 pt-2 gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleCreate} disabled={!fileName.trim()}>
