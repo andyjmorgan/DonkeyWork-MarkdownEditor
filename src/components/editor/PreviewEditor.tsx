@@ -1,0 +1,74 @@
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Underline from '@tiptap/extension-underline'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import { useEffect, useRef } from 'react'
+import { Toolbar } from '@/components/layout/Toolbar'
+import { htmlToMarkdown } from '@/lib/markdown/serializer'
+import { markdownToHtml } from '@/lib/markdown/parser'
+import './preview-editor.css'
+
+interface PreviewEditorProps {
+  content: string
+  onChange: (content: string) => void
+  className?: string
+}
+
+export function PreviewEditor({ content, onChange, className }: PreviewEditorProps) {
+  const isUpdatingRef = useRef(false)
+  const lastEmittedContentRef = useRef('')
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+    ],
+    content: '',
+    editorProps: {
+      attributes: {
+        class: 'prose dark:prose-invert max-w-none focus:outline-none min-h-full p-4',
+      },
+    },
+    onUpdate: ({ editor }) => {
+      if (isUpdatingRef.current) return
+      const html = editor.getHTML()
+      const markdown = htmlToMarkdown(html)
+      lastEmittedContentRef.current = markdown
+      onChange(markdown)
+    },
+  })
+
+  useEffect(() => {
+    if (!editor) return
+
+    // Don't update if this content was just emitted by this editor
+    if (content === lastEmittedContentRef.current) {
+      return
+    }
+
+    // Convert markdown to HTML
+    const html = markdownToHtml(content)
+    const currentHtml = editor.getHTML()
+
+    // Only update if content has meaningfully changed
+    if (html !== currentHtml) {
+      isUpdatingRef.current = true
+      editor.commands.setContent(html)
+      isUpdatingRef.current = false
+    }
+  }, [editor, content])
+
+  return (
+    <div className={`flex flex-col ${className}`}>
+      <Toolbar editor={editor} />
+      <div className="flex-1 overflow-auto">
+        <EditorContent editor={editor} className="h-full" />
+      </div>
+    </div>
+  )
+}
