@@ -42,8 +42,11 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
       }),
       MermaidNode,
       Image.configure({
-        inline: true,
+        inline: false,
         allowBase64: true,
+        HTMLAttributes: {
+          class: 'editor-image',
+        },
       }),
       Underline,
       TaskList,

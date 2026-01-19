@@ -32,11 +32,8 @@ export function Toolbar({ editor }: ToolbarProps) {
     return null
   }
 
-  const handleInsertImage = (url: string, width?: number) => {
-    editor.chain().focus().setImage({
-      src: url,
-      style: width ? `width: ${width}%; height: auto;` : undefined
-    }).run()
+  const handleInsertImage = (url: string) => {
+    editor.chain().focus().setImage({ src: url }).run()
   }
 
   const ToolbarButton = ({

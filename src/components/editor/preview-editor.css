@@ -70,7 +70,7 @@
   margin-bottom: 0 !important;
 }
 
-/* Code block wrapper with copy button */
+/* Code block wrapper with controls */
 .code-block-wrapper {
   position: relative;
   margin: 1em 0;
@@ -80,26 +80,33 @@
   position: relative;
 }
 
-.code-block-copy-button {
+.code-block-controls {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.code-block-container:hover .code-block-controls {
+  opacity: 1;
+}
+
+.code-block-copy-button {
   padding: 0.5rem;
   background: hsl(var(--muted));
   border: 1px solid hsl(var(--border));
   border-radius: 0.375rem;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, background 0.2s;
-  z-index: 10;
+  transition: background 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   color: hsl(var(--muted-foreground));
-}
-
-.code-block-container:hover .code-block-copy-button {
-  opacity: 1;
 }
 
 .code-block-copy-button:hover {
@@ -109,11 +116,14 @@
 
 .code-block-copy-button.copied {
   color: #22c55e;
-  opacity: 1;
 }
 
 .code-block-copy-button.copied:hover {
   color: #16a34a;
+}
+
+.code-block-controls:has(.code-block-copy-button.copied) {
+  opacity: 1;
 }
 
 /* Code block syntax highlighting */
@@ -346,7 +356,7 @@
   max-width: 100%;
   height: auto;
   display: block;
-  margin: 1em 0;
+  margin: 1em auto;
   border-radius: 0.5rem;
   cursor: pointer;
 }
