@@ -15,7 +15,7 @@ export function TableWithControls({ editor, getPos, node }: NodeViewProps) {
   const [rowDropdownOpen, setRowDropdownOpen] = useState(false)
   const [colDropdownOpen, setColDropdownOpen] = useState(false)
   const tableRef = useRef<HTMLDivElement>(null)
-  const clearTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const clearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const wrapperElement = tableRef.current
@@ -45,7 +45,7 @@ export function TableWithControls({ editor, getPos, node }: NodeViewProps) {
         const cells = Array.from(row?.querySelectorAll('td, th') || [])
 
         if (row) {
-          setHoveredRow(rows.indexOf(row))
+          setHoveredRow(rows.indexOf(row as HTMLTableRowElement))
         }
         setHoveredCol(cells.indexOf(cell as HTMLTableCellElement))
       }
@@ -79,6 +79,7 @@ export function TableWithControls({ editor, getPos, node }: NodeViewProps) {
     if (typeof getPos !== 'function') return null
 
     const pos = getPos()
+    if (pos === undefined) return null
     let currentPos = pos + 1 // Start inside table
 
     // Navigate to the specific row

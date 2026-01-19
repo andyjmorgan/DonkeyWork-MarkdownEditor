@@ -1,9 +1,9 @@
-import { NodeViewContent, NodeViewWrapper, NodeViewProps } from '@tiptap/react'
+import { NodeViewWrapper, NodeViewProps } from '@tiptap/react'
 import { useEffect, useRef, useState } from 'react'
 import mermaid from 'mermaid'
 import { useThemeStore } from '@/store/useThemeStore'
 
-export function MermaidDiagram({ node, updateAttributes }: NodeViewProps) {
+export function MermaidDiagram({ node }: NodeViewProps) {
   const [svg, setSvg] = useState<string>('')
   const [error, setError] = useState<string>('')
   const containerRef = useRef<HTMLDivElement>(null)

@@ -12,16 +12,16 @@ const turndownService = new TurndownService({
 
 // Add task list rule
 turndownService.addRule('taskList', {
-  filter: (node) => {
+  filter: (node: Node) => {
     return (
       node.nodeName === 'LI' &&
       node.parentNode?.nodeName === 'UL' &&
-      (node.getAttribute('data-type') === 'taskItem' ||
+      ((node as Element).getAttribute('data-type') === 'taskItem' ||
         (node as HTMLLIElement).firstChild?.nodeName === 'INPUT')
     )
   },
-  replacement: (content, node) => {
-    const input = node.querySelector('input[type="checkbox"]')
+  replacement: (content: string, node: Node) => {
+    const input = (node as HTMLElement).querySelector('input[type="checkbox"]')
     const checked = input && (input as HTMLInputElement).checked
     // Remove extra newlines and trim content
     const cleanContent = content.trim().replace(/\n+/g, ' ')
@@ -31,8 +31,10 @@ turndownService.addRule('taskList', {
 
 // Add strikethrough rule
 turndownService.addRule('strikethrough', {
-  filter: ['del', 's', 'strike'],
-  replacement: (content) => {
+  filter: (node: Node) => {
+    return ['DEL', 'S', 'STRIKE'].includes(node.nodeName)
+  },
+  replacement: (content: string) => {
     return `~~${content}~~`
   },
 })
@@ -40,17 +42,17 @@ turndownService.addRule('strikethrough', {
 // Add underline rule (convert to markdown emphasis)
 turndownService.addRule('underline', {
   filter: ['u'],
-  replacement: (content) => {
+  replacement: (content: string) => {
     return `_${content}_`
   },
 })
 
 // Add code block rule to remove trailing newlines
 turndownService.addRule('codeBlock', {
-  filter: (node) => {
+  filter: (node: Node) => {
     return node.nodeName === 'PRE' && node.firstChild?.nodeName === 'CODE'
   },
-  replacement: (content, node) => {
+  replacement: (content: string, node: Node) => {
     const preElement = node as HTMLElement
     const codeElement = node.firstChild as HTMLElement
 
@@ -67,7 +69,7 @@ turndownService.addRule('codeBlock', {
 // Add table rule for GFM-style tables
 turndownService.addRule('table', {
   filter: 'table',
-  replacement: (content, node) => {
+  replacement: (_content: string, node: Node) => {
     const table = node as HTMLTableElement
     const rows = Array.from(table.querySelectorAll('tr'))
 

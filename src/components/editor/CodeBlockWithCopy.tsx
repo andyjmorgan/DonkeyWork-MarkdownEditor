@@ -85,7 +85,7 @@ export function CodeBlockWithCopy({ node, updateAttributes }: NodeViewProps) {
           </div>
         </div>
         <pre ref={preRef}>
-          <NodeViewContent as="code" />
+          <NodeViewContent />
         </pre>
       </div>
     </NodeViewWrapper>

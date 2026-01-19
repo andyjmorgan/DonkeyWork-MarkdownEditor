@@ -68,11 +68,12 @@ export const MermaidNode = Node.create({
   addCommands() {
     return {
       setMermaid:
-        () =>
-        ({ commands }) => {
+        (attributes?: { code?: string }) =>
+        ({ commands }: any) => {
+          const code = attributes?.code || 'graph TD\n  A[Start] --> B[End]'
           return commands.insertContent({
             type: this.name,
-            content: [{ type: 'text', text: 'graph TD\n  A[Start] --> B[End]' }],
+            content: [{ type: 'text', text: code }],
           })
         },
     }
