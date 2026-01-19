@@ -16,6 +16,8 @@ import {
   CodeSquare,
   Network,
   ImagePlus,
+  Table as TableIcon,
+  Minus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -153,7 +155,7 @@ export function Toolbar({ editor }: ToolbarProps) {
       </div>
 
       {/* Blocks */}
-      <div className="flex items-center gap-0.5 px-2">
+      <div className="flex items-center gap-0.5 border-r border-border px-2">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')}
@@ -181,6 +183,24 @@ export function Toolbar({ editor }: ToolbarProps) {
           title="Insert Image"
         >
           <ImagePlus className="h-4 w-4" />
+        </ToolbarButton>
+      </div>
+
+      {/* Table & Divider */}
+      <div className="flex items-center gap-0.5 px-2">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          active={editor.isActive('table')}
+          title="Insert Table"
+        >
+          <TableIcon className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          active={false}
+          title="Horizontal Rule"
+        >
+          <Minus className="h-4 w-4" />
         </ToolbarButton>
       </div>
 

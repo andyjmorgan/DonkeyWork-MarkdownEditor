@@ -5,6 +5,10 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Image from '@tiptap/extension-image'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableCell } from '@tiptap/extension-table-cell'
 import { all, createLowlight } from 'lowlight'
 import { useEffect, useRef } from 'react'
 import { Toolbar } from '@/components/layout/Toolbar'
@@ -12,6 +16,7 @@ import { htmlToMarkdown } from '@/lib/markdown/serializer'
 import { markdownToHtml } from '@/lib/markdown/parser'
 import { CodeBlockWithCopy } from './CodeBlockWithCopy'
 import { MermaidNode } from '@/lib/markdown/mermaidExtension'
+import { TableWithControls } from './TableWithControls'
 import './preview-editor.css'
 
 const lowlight = createLowlight(all)
@@ -19,6 +24,14 @@ const lowlight = createLowlight(all)
 const CustomCodeBlock = CodeBlockLowlight.extend({
   addNodeView() {
     return ReactNodeViewRenderer(CodeBlockWithCopy)
+  },
+})
+
+const CustomTable = Table.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(TableWithControls, {
+      contentDOMElementTag: 'table',
+    })
   },
 })
 
@@ -53,6 +66,15 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
       TaskItem.configure({
         nested: true,
       }),
+      CustomTable.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'editor-table',
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: '',
     editorProps: {

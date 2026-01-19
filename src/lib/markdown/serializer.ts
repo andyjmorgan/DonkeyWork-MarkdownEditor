@@ -64,6 +64,37 @@ turndownService.addRule('codeBlock', {
   },
 })
 
+// Add table rule for GFM-style tables
+turndownService.addRule('table', {
+  filter: 'table',
+  replacement: (content, node) => {
+    const table = node as HTMLTableElement
+    const rows = Array.from(table.querySelectorAll('tr'))
+
+    if (rows.length === 0) return ''
+
+    let markdown = '\n'
+
+    rows.forEach((row, rowIndex) => {
+      const cells = Array.from(row.querySelectorAll('th, td'))
+      const cellContents = cells.map(cell => {
+        return cell.textContent?.trim().replace(/\n/g, ' ') || ''
+      })
+
+      markdown += '| ' + cellContents.join(' | ') + ' |\n'
+
+      // Add separator row after header
+      if (rowIndex === 0 && row.querySelector('th')) {
+        const separator = cells.map(() => '---').join(' | ')
+        markdown += '| ' + separator + ' |\n'
+      }
+    })
+
+    markdown += '\n'
+    return markdown
+  },
+})
+
 export function htmlToMarkdown(html: string): string {
   return turndownService.turndown(html)
 }
