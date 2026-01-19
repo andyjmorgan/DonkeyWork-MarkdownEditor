@@ -75,7 +75,7 @@ export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogPr
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="image-width">Width (%)</Label>
+            <Label htmlFor="image-width">Size (%)</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="image-width"
