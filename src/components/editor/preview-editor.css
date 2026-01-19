@@ -286,6 +286,61 @@
   color: #aff5b4;
 }
 
+/* Mermaid diagram styles */
+.mermaid-diagram-wrapper {
+  margin: 1em 0;
+}
+
+.mermaid-diagram-container {
+  background: hsl(var(--muted));
+  border-radius: 0.5rem;
+  padding: 1em;
+  overflow-x: auto;
+}
+
+.mermaid-diagram-output {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mermaid-diagram-output svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-diagram-error {
+  color: hsl(var(--destructive));
+}
+
+.mermaid-error-title {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+.mermaid-error-message {
+  background: hsl(var(--destructive) / 0.1);
+  padding: 0.5em;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5em;
+  font-size: 0.875em;
+  color: hsl(var(--destructive-foreground));
+}
+
+.mermaid-error-code pre {
+  background: hsl(var(--muted));
+  padding: 0.5em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  margin: 0;
+}
+
+.mermaid-diagram-placeholder pre {
+  margin: 0;
+  background: none;
+  padding: 0;
+}
+
 /* Placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

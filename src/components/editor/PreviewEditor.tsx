@@ -10,6 +10,7 @@ import { Toolbar } from '@/components/layout/Toolbar'
 import { htmlToMarkdown } from '@/lib/markdown/serializer'
 import { markdownToHtml } from '@/lib/markdown/parser'
 import { CodeBlockWithCopy } from './CodeBlockWithCopy'
+import { MermaidNode } from '@/lib/markdown/mermaidExtension'
 import './preview-editor.css'
 
 const lowlight = createLowlight(all)
@@ -38,6 +39,7 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
       CustomCodeBlock.configure({
         lowlight,
       }),
+      MermaidNode,
       Underline,
       TaskList,
       TaskItem.configure({

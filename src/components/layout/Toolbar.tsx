@@ -13,6 +13,7 @@ import {
   ListChecks,
   Quote,
   CodeSquare,
+  Network,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -157,6 +158,13 @@ export function Toolbar({ editor }: ToolbarProps) {
           title="Code Block"
         >
           <CodeSquare className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setMermaid().run()}
+          active={editor.isActive('mermaid')}
+          title="Mermaid Diagram"
+        >
+          <Network className="h-4 w-4" />
         </ToolbarButton>
       </div>
     </div>
