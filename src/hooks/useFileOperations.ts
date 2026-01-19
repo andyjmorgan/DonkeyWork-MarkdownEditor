@@ -12,8 +12,6 @@ export function useFileOperations() {
     loadFile,
     updateFile,
     removeFile,
-    setActiveFile,
-    closeTab,
     files,
     activeFileId,
   } = useFileStore()
@@ -76,8 +74,8 @@ export function useFileOperations() {
 
   const saveFileContent = useCallback(
     async (id: string, content: string) => {
+      updateFile(id, { content })
       try {
-        updateFile(id, { content })
         await db.updateFile(id, { content })
       } catch (error) {
         console.error('Failed to save file content:', error)

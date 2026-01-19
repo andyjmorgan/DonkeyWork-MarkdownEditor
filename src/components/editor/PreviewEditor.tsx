@@ -11,7 +11,7 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { all, createLowlight } from 'lowlight'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { Toolbar } from '@/components/layout/Toolbar'
 import { htmlToMarkdown } from '@/lib/markdown/serializer'
 import { markdownToHtml } from '@/lib/markdown/parser'
@@ -49,43 +49,47 @@ export function PreviewEditor({ content, onChange, className, onSave, onNew }: P
   const isUpdatingRef = useRef(false)
   const lastEmittedContentRef = useRef('')
 
+  const extensions = useMemo(() => [
+    StarterKit.configure({
+      codeBlock: false, // Disable default code block (using custom)
+    }),
+    MermaidNode, // Must come before CustomCodeBlock to match mermaid blocks first
+    CustomCodeBlock.configure({
+      lowlight,
+    }),
+    Image.configure({
+      inline: false,
+      allowBase64: true,
+      HTMLAttributes: {
+        class: 'editor-image',
+      },
+    }),
+    Underline,
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'text-primary underline',
+      },
+    }),
+    TaskList,
+    TaskItem.configure({
+      nested: true,
+    }),
+    CustomTable.configure({
+      resizable: true,
+      HTMLAttributes: {
+        class: 'editor-table',
+      },
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+  ], [])
+
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        codeBlock: false, // Disable default code block
-      }),
-      MermaidNode, // Must come before CustomCodeBlock to match mermaid blocks first
-      CustomCodeBlock.configure({
-        lowlight,
-      }),
-      Image.configure({
-        inline: false,
-        allowBase64: true,
-        HTMLAttributes: {
-          class: 'editor-image',
-        },
-      }),
-      Underline,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary underline',
-        },
-      }),
-      TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
-      CustomTable.configure({
-        resizable: true,
-        HTMLAttributes: {
-          class: 'editor-table',
-        },
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-    ],
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
+    extensions,
     content: '',
     editorProps: {
       attributes: {
@@ -123,6 +127,10 @@ export function PreviewEditor({ content, onChange, className, onSave, onNew }: P
 
   // Keyboard shortcuts
   useKeyboardShortcuts({ editor, onSave, onNew })
+
+  if (!editor) {
+    return null
+  }
 
   return (
     <div className={`flex flex-col ${className}`}>

@@ -1,32 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorView } from '@codemirror/view'
 import { useThemeStore } from '@/store'
 import { Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-const darkTheme = EditorView.theme({
-  '&': {
-    backgroundColor: '#000000',
-  },
-  '.cm-gutters': {
-    backgroundColor: '#000000 !important',
-    borderRight: '1px solid hsl(0 0% 20%)',
-  },
-  '.cm-gutter': {
-    backgroundColor: '#000000 !important',
-  },
-  '.cm-lineNumbers': {
-    backgroundColor: '#000000 !important',
-  },
-  '.cm-content': {
-    backgroundColor: '#000000',
-  },
-  '.cm-scroller': {
-    backgroundColor: '#000000',
-  },
-}, { dark: true })
+import { COPY_SUCCESS_DURATION } from '@/lib/constants'
 
 interface RawEditorProps {
   value: string
@@ -43,17 +22,11 @@ export function RawEditor({ value, onChange, className, lineWrapping = false }: 
     try {
       await navigator.clipboard.writeText(value)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopied(false), COPY_SUCCESS_DURATION)
     } catch (error) {
-      console.error('Failed to copy:', error)
+      // Silently fail - clipboard access may be denied
     }
   }
-
-  const extensions = useMemo(() => [
-    markdown(),
-    ...(lineWrapping ? [EditorView.lineWrapping] : []),
-    ...(theme === 'dark' ? [darkTheme] : []),
-  ], [lineWrapping, theme])
 
   return (
     <div className={`relative group ${className}`}>
@@ -61,7 +34,10 @@ export function RawEditor({ value, onChange, className, lineWrapping = false }: 
         value={value}
         height="100%"
         theme={theme === 'dark' ? 'dark' : 'light'}
-        extensions={extensions}
+        extensions={[
+          markdown(),
+          ...(lineWrapping ? [EditorView.lineWrapping] : []),
+        ]}
         onChange={onChange}
         basicSetup={{
           lineNumbers: true,

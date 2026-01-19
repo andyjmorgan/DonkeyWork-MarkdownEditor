@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import mermaid from 'mermaid'
 import { useThemeStore } from '@/store/useThemeStore'
+import { MERMAID_DEBOUNCE_DELAY } from '@/lib/constants'
 
 interface MermaidDialogProps {
   open: boolean
@@ -55,7 +55,7 @@ export function MermaidDialog({ open, onOpenChange, onInsertMermaid }: MermaidDi
       }
     }
 
-    const debounce = setTimeout(renderPreview, 500)
+    const debounce = setTimeout(renderPreview, MERMAID_DEBOUNCE_DELAY)
     return () => clearTimeout(debounce)
   }, [code, theme])
 
@@ -84,6 +84,9 @@ export function MermaidDialog({ open, onOpenChange, onInsertMermaid }: MermaidDi
       <DialogContent className="sm:max-w-5xl max-h-[85vh] p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-xl">Insert Mermaid Diagram</DialogTitle>
+          <DialogDescription className="sr-only">
+            Create and insert a Mermaid diagram with live preview
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-4 px-6 pb-6 flex-1 overflow-hidden">

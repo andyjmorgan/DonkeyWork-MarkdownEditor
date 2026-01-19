@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useFileStore } from '@/store'
 import { formatDistanceToNow } from 'date-fns'
+import { DEFAULT_FILE_CONTENT } from '@/lib/constants'
 
 export function WelcomeScreen() {
   const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState(false)
@@ -32,9 +33,9 @@ export function WelcomeScreen() {
 
   const handleCreateFile = async (name: string) => {
     try {
-      await createNewFile(name, '# Welcome\n\nStart writing your markdown here...')
+      await createNewFile(name, DEFAULT_FILE_CONTENT)
     } catch (error) {
-      console.error('Failed to create file:', error)
+      // Error is already logged in useFileOperations
     }
   }
 
@@ -42,7 +43,7 @@ export function WelcomeScreen() {
     try {
       await loadFromFile(file)
     } catch (error) {
-      console.error('Failed to load file:', error)
+      // Error is already logged in useFileOperations
     }
   }
 

@@ -45,7 +45,7 @@ export function MermaidDiagram({ node, updateAttributes }: NodeViewProps) {
   }, [node.textContent, theme])
 
   return (
-    <NodeViewWrapper className="mermaid-diagram-wrapper">
+    <NodeViewWrapper className="mermaid-diagram-wrapper" contentEditable={false}>
       <div className="mermaid-diagram-container">
         {svg ? (
           <div
@@ -58,16 +58,12 @@ export function MermaidDiagram({ node, updateAttributes }: NodeViewProps) {
             <div className="mermaid-error-title">Mermaid Syntax Error</div>
             <pre className="mermaid-error-message">{error}</pre>
             <div className="mermaid-error-code">
-              <pre ref={codeRef}>
-                <NodeViewContent as="code" />
-              </pre>
+              <pre ref={codeRef}>{node.textContent}</pre>
             </div>
           </div>
         ) : (
           <div className="mermaid-diagram-placeholder">
-            <pre ref={codeRef}>
-              <NodeViewContent as="code" />
-            </pre>
+            <pre ref={codeRef}>{node.textContent || 'Empty mermaid diagram'}</pre>
           </div>
         )}
       </div>

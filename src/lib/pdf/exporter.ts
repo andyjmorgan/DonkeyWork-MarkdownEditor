@@ -2,6 +2,7 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { markdownToHtml } from '@/lib/markdown/parser'
 import mermaid from 'mermaid'
+import { MERMAID_RENDER_DELAY } from '@/lib/constants'
 
 export interface ExportPdfOptions {
   filename?: string
@@ -77,13 +78,13 @@ export async function exportToPdf({ filename = 'document.pdf', markdown }: Expor
             preElement.parentElement.replaceChild(svgContainer, preElement)
           }
         } catch (error) {
-          console.error('Failed to render mermaid diagram:', error)
+          // Skip mermaid diagrams that fail to render
         }
       }
     }
 
     // Wait a bit for mermaid to fully render
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, MERMAID_RENDER_DELAY))
 
     // Capture the content as canvas
     const canvas = await html2canvas(container, {

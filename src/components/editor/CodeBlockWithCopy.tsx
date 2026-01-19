@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { COPY_SUCCESS_DURATION } from '@/lib/constants'
 
 // Common programming languages supported by lowlight
 const LANGUAGES = [
@@ -48,7 +49,7 @@ export function CodeBlockWithCopy({ node, updateAttributes }: NodeViewProps) {
       const code = preRef.current.textContent || ''
       await navigator.clipboard.writeText(code)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopied(false), COPY_SUCCESS_DURATION)
     }
   }
 

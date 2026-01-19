@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -44,6 +43,9 @@ export function ImageDialog({ open, onOpenChange, onInsertImage }: ImageDialogPr
       <DialogContent className="sm:max-w-4xl p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-xl">Insert Image</DialogTitle>
+          <DialogDescription className="sr-only">
+            Insert an image from URL or base64 data
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-5 gap-4 px-6 pb-6">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,6 +43,9 @@ export function LinkDialog({ open, onOpenChange, onInsertLink, initialUrl = '', 
       <DialogContent className="sm:max-w-md p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-xl">Insert Link</DialogTitle>
+          <DialogDescription className="sr-only">
+            Add a hyperlink with optional display text
+          </DialogDescription>
         </DialogHeader>
 
         <div className="px-6 pb-6 space-y-4">

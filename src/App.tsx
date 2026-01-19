@@ -48,7 +48,6 @@ function App() {
         filename,
       })
     } catch (error) {
-      console.error('Failed to export PDF:', error)
       alert('Failed to export PDF. Please try again.')
     }
   }, [activeFile])

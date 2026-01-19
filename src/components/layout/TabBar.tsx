@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
+import { DEFAULT_FILE_CONTENT } from '@/lib/constants'
 
 export function TabBar() {
   const { tabs, files, activeFileId, setActiveFile, closeTab, openTab } = useFileStore()
@@ -43,9 +43,9 @@ export function TabBar() {
 
   const handleCreateFile = async (name: string) => {
     try {
-      await createNewFile(name, '# Welcome\n\nStart writing your markdown here...')
+      await createNewFile(name, DEFAULT_FILE_CONTENT)
     } catch (error) {
-      console.error('Failed to create file:', error)
+      // Error is already logged in useFileOperations
     }
   }
 

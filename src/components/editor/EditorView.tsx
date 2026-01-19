@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DEFAULT_FILE_CONTENT } from '@/lib/constants'
 
 interface EditorViewProps {
   onDownloadMarkdown: () => void
@@ -75,9 +76,9 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
   const handleCreateFile = useCallback(
     async (name: string) => {
       try {
-        await createNewFile(name, '# Welcome\n\nStart writing your markdown here...')
+        await createNewFile(name, DEFAULT_FILE_CONTENT)
       } catch (error) {
-        console.error('Failed to create file:', error)
+        // Error is already logged in useFileOperations
       }
     },
     [createNewFile]

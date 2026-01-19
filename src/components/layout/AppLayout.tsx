@@ -3,6 +3,7 @@ import { TabBar } from './TabBar'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAutosave } from '@/hooks/useAutosave'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -10,6 +11,9 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, showTabs = false }: AppLayoutProps) {
+  // Run autosave hook (no UI, just side effects)
+  useAutosave()
+
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
       {/* Header */}

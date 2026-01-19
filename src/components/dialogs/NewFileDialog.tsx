@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 interface NewFileDialogProps {
   open: boolean
@@ -62,6 +61,9 @@ export function NewFileDialog({
       <DialogContent className="sm:max-w-md p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-xl">New File</DialogTitle>
+          <DialogDescription className="sr-only">
+            Create a new markdown file
+          </DialogDescription>
         </DialogHeader>
 
         <div className="px-6 pb-6">

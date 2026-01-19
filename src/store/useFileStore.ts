@@ -46,12 +46,15 @@ export const useFileStore = create<FileStore>((set, get) => ({
       const file = state.files.get(id)
       if (!file) return state
 
+      const newIsDirty = updates.isDirty !== undefined ? updates.isDirty : true
+
       const newFiles = new Map(state.files)
       newFiles.set(id, {
         ...file,
         ...updates,
         lastModified: Date.now(),
-        isDirty: true,
+        // Only set isDirty to true if not explicitly provided in updates
+        isDirty: newIsDirty,
       })
       return { files: newFiles }
     }),

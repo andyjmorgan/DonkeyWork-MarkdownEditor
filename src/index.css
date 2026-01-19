@@ -61,6 +61,47 @@
     min-width: 320px;
     min-height: 100vh;
   }
+
+  /* Text selection styling */
+  ::selection {
+    background-color: hsl(210 100% 50% / 0.3);
+    color: inherit;
+  }
+
+  ::-moz-selection {
+    background-color: hsl(210 100% 50% / 0.3);
+    color: inherit;
+  }
+
+  .dark ::selection {
+    background-color: hsl(200 70% 40% / 0.6);
+    color: hsl(0 0% 100%);
+  }
+
+  .dark ::-moz-selection {
+    background-color: hsl(200 70% 40% / 0.6);
+    color: hsl(0 0% 100%);
+  }
+
+  /* CodeMirror selection override */
+  .dark .cm-editor .cm-selectionBackground {
+    background-color: rgba(13, 110, 153, 0.6) !important;
+  }
+
+  .dark .cm-editor.cm-focused .cm-selectionBackground {
+    background-color: rgba(13, 110, 153, 0.6) !important;
+  }
+
+  .dark .cm-editor .cm-line::selection,
+  .dark .cm-editor .cm-content::selection,
+  .dark .cm-editor .cm-line *::selection,
+  .dark .cm-editor .cm-content *::selection {
+    background-color: rgba(13, 110, 153, 0.6) !important;
+  }
+
+  .dark .cm-editor .cm-selectionLayer .cm-selectionBackground {
+    background-color: rgba(13, 110, 153, 0.6) !important;
+  }
 }
 
 /* Custom scrollbar styling */
