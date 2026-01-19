@@ -1,11 +1,14 @@
-import { X } from 'lucide-react'
+import { useState } from 'react'
+import { X, Plus } from 'lucide-react'
 import { useFileStore } from '@/store'
 import { useFileOperations } from '@/hooks/useFileOperations'
+import { NewFileDialog } from '@/components/dialogs/NewFileDialog'
 import { cn } from '@/lib/utils'
 
 export function TabBar() {
   const { tabs, files, activeFileId, setActiveFile } = useFileStore()
-  const { deleteFile } = useFileOperations()
+  const { deleteFile, createNewFile } = useFileOperations()
+  const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState(false)
 
   if (tabs.length === 0) {
     return null
@@ -14,6 +17,14 @@ export function TabBar() {
   const truncateFileName = (name: string, maxLength: number = 20) => {
     if (name.length <= maxLength) return name
     return name.substring(0, maxLength - 3) + '...'
+  }
+
+  const handleCreateFile = async (name: string) => {
+    try {
+      await createNewFile(name, '# Welcome\n\nStart writing your markdown here...')
+    } catch (error) {
+      console.error('Failed to create file:', error)
+    }
   }
 
   return (
@@ -60,6 +71,22 @@ export function TabBar() {
           </div>
         )
       })}
+
+      {/* New file button */}
+      <button
+        onClick={() => setIsNewFileDialogOpen(true)}
+        className="flex items-center gap-2 px-4 py-2 border-r border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+        aria-label="Create new file"
+      >
+        <Plus className="w-4 h-4" />
+        <span className="text-sm">New</span>
+      </button>
+
+      <NewFileDialog
+        open={isNewFileDialogOpen}
+        onOpenChange={setIsNewFileDialogOpen}
+        onCreateFile={handleCreateFile}
+      />
     </div>
   )
 }

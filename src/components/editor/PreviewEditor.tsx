@@ -1,6 +1,7 @@
 import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import Link from '@tiptap/extension-link'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
@@ -17,6 +18,7 @@ import { markdownToHtml } from '@/lib/markdown/parser'
 import { CodeBlockWithCopy } from './CodeBlockWithCopy'
 import { MermaidNode } from '@/lib/markdown/mermaidExtension'
 import { TableWithControls } from './TableWithControls'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import './preview-editor.css'
 
 const lowlight = createLowlight(all)
@@ -39,9 +41,11 @@ interface PreviewEditorProps {
   content: string
   onChange: (content: string) => void
   className?: string
+  onSave?: () => void
+  onNew?: () => void
 }
 
-export function PreviewEditor({ content, onChange, className }: PreviewEditorProps) {
+export function PreviewEditor({ content, onChange, className, onSave, onNew }: PreviewEditorProps) {
   const isUpdatingRef = useRef(false)
   const lastEmittedContentRef = useRef('')
 
@@ -62,6 +66,12 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
         },
       }),
       Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary underline',
+        },
+      }),
       TaskList,
       TaskItem.configure({
         nested: true,
@@ -110,6 +120,9 @@ export function PreviewEditor({ content, onChange, className }: PreviewEditorPro
       isUpdatingRef.current = false
     }
   }, [editor, content])
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({ editor, onSave, onNew })
 
   return (
     <div className={`flex flex-col ${className}`}>

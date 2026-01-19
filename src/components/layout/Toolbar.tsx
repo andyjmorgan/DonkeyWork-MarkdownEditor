@@ -18,6 +18,7 @@ import {
   ImagePlus,
   Table as TableIcon,
   Minus,
+  Link as LinkIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -36,6 +37,25 @@ export function Toolbar({ editor }: ToolbarProps) {
 
   const handleInsertImage = (url: string) => {
     editor.chain().focus().setImage({ src: url }).run()
+  }
+
+  const handleToggleLink = () => {
+    const previousUrl = editor.getAttributes('link').href
+    const url = window.prompt('Enter URL:', previousUrl)
+
+    // cancelled
+    if (url === null) {
+      return
+    }
+
+    // empty
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      return
+    }
+
+    // update link
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
   }
 
   const ToolbarButton = ({
@@ -65,8 +85,33 @@ export function Toolbar({ editor }: ToolbarProps) {
 
   return (
     <div className="flex items-center gap-1 flex-wrap px-2 py-1 border-b border-border bg-muted/50">
-      {/* Text formatting */}
+      {/* Headings */}
       <div className="flex items-center gap-0.5 border-r border-border pr-2">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          active={editor.isActive('heading', { level: 1 })}
+          title="Heading 1"
+        >
+          <Heading1 className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          active={editor.isActive('heading', { level: 2 })}
+          title="Heading 2"
+        >
+          <Heading2 className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          active={editor.isActive('heading', { level: 3 })}
+          title="Heading 3"
+        >
+          <Heading3 className="h-4 w-4" />
+        </ToolbarButton>
+      </div>
+
+      {/* Text formatting */}
+      <div className="flex items-center gap-0.5 border-r border-border px-2">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
@@ -104,28 +149,21 @@ export function Toolbar({ editor }: ToolbarProps) {
         </ToolbarButton>
       </div>
 
-      {/* Headings */}
+      {/* Link & Image */}
       <div className="flex items-center gap-0.5 border-r border-border px-2">
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          active={editor.isActive('heading', { level: 1 })}
-          title="Heading 1"
+          onClick={handleToggleLink}
+          active={editor.isActive('link')}
+          title="Insert Link (Cmd+K)"
         >
-          <Heading1 className="h-4 w-4" />
+          <LinkIcon className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          active={editor.isActive('heading', { level: 2 })}
-          title="Heading 2"
+          onClick={() => setIsImageDialogOpen(true)}
+          active={editor.isActive('image')}
+          title="Insert Image"
         >
-          <Heading2 className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          active={editor.isActive('heading', { level: 3 })}
-          title="Heading 3"
-        >
-          <Heading3 className="h-4 w-4" />
+          <ImagePlus className="h-4 w-4" />
         </ToolbarButton>
       </div>
 
@@ -170,24 +208,10 @@ export function Toolbar({ editor }: ToolbarProps) {
         >
           <CodeSquare className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setMermaid().run()}
-          active={editor.isActive('mermaid')}
-          title="Mermaid Diagram"
-        >
-          <Network className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => setIsImageDialogOpen(true)}
-          active={editor.isActive('image')}
-          title="Insert Image"
-        >
-          <ImagePlus className="h-4 w-4" />
-        </ToolbarButton>
       </div>
 
       {/* Table & Divider */}
-      <div className="flex items-center gap-0.5 px-2">
+      <div className="flex items-center gap-0.5 border-r border-border px-2">
         <ToolbarButton
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
           active={editor.isActive('table')}
@@ -201,6 +225,17 @@ export function Toolbar({ editor }: ToolbarProps) {
           title="Horizontal Rule"
         >
           <Minus className="h-4 w-4" />
+        </ToolbarButton>
+      </div>
+
+      {/* Mermaid Diagram */}
+      <div className="flex items-center gap-0.5 px-2">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setMermaid().run()}
+          active={editor.isActive('mermaid')}
+          title="Mermaid Diagram"
+        >
+          <Network className="h-4 w-4" />
         </ToolbarButton>
       </div>
 

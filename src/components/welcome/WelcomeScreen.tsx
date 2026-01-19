@@ -36,7 +36,7 @@ export function WelcomeScreen() {
               className="w-24 h-24"
             />
           </div>
-          <h1 className="text-4xl font-bold">Welcome to Markdown Editor</h1>
+          <h1 className="text-4xl font-bold">DonkeyWork Markdown Editor</h1>
           <p className="text-lg text-muted-foreground">
             A beautiful, minimalistic markdown editor with live preview
           </p>
@@ -59,18 +59,6 @@ export function WelcomeScreen() {
             <Plus className="w-5 h-5" />
             Create New File
           </Button>
-        </div>
-
-        <div className="text-center text-sm text-muted-foreground space-y-1">
-          <p>Features:</p>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-            <span>• Split view editing</span>
-            <span>• Live preview</span>
-            <span>• Mermaid diagrams</span>
-            <span>• PDF export</span>
-            <span>• Autosave</span>
-            <span>• Dark mode</span>
-          </div>
         </div>
       </div>
 
