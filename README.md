@@ -6,6 +6,8 @@
 
 A beautiful, minimalistic markdown WYSIWYG editor with split-view editing, live preview, and powerful features.
 
+**🚀 [Try it now at markdown.donkeywork.dev](https://markdown.donkeywork.dev)**
+
 ## Features
 
 - **Dual-Pane Split View** - Edit raw markdown (CodeMirror) and see live WYSIWYG preview (Tiptap) side-by-side
