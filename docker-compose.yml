@@ -2,27 +2,11 @@ version: '3.8'
 
 services:
   markitdown-editor:
+    image: ghcr.io/andyjmorgan/donkeywork-markdowneditor:latest
     container_name: donkeywork-markdown-editor
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
     ports:
       - "3000:80"
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    environment:
-      - NODE_ENV=production
-    labels:
-      - "com.donkeywork.description=DonkeyWork Markdown Editor"
-      - "com.donkeywork.version=0.1.0"
-    networks:
-      - markitdown-network
 
 networks:
   markitdown-network:
