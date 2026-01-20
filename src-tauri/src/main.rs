@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  donkeywork_markdown_editor_lib::run();
+  markdown_editor_lib::run();
 }
