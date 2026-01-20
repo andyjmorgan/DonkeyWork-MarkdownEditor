@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "DonkeyWork Markdown Editor",
+  "productName": "Markdown Editor",
   "version": "0.1.0",
   "identifier": "com.donkeywork.markdowneditor",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "DonkeyWork Markdown Editor",
+        "title": "Markdown Editor",
         "width": 1400,
         "height": 900,
         "minWidth": 800,

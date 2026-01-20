@@ -1,50 +1,40 @@
-import { getDB } from './index'
 import { MarkdownFile } from '@/types'
+import { getStorage } from '@/lib/storage/provider'
+
+/**
+ * File storage operations using the abstracted storage provider
+ * Automatically uses IndexedDB for web or file system for Tauri
+ */
 
 export async function getAllFiles(): Promise<MarkdownFile[]> {
-  const db = await getDB()
-  const files = await db.getAll('files')
-  return files
+  const storage = getStorage()
+  return await storage.getAllFiles()
 }
 
 export async function getFile(id: string): Promise<MarkdownFile | undefined> {
-  const db = await getDB()
-  return await db.get('files', id)
+  const storage = getStorage()
+  return await storage.getFile(id)
 }
 
 export async function saveFile(file: MarkdownFile): Promise<void> {
-  const db = await getDB()
-  const fileToSave = {
-    ...file,
-    lastModified: Date.now(),
-  }
-  await db.put('files', fileToSave)
+  const storage = getStorage()
+  return await storage.saveFile(file)
 }
 
 export async function deleteFile(id: string): Promise<void> {
-  const db = await getDB()
-  await db.delete('files', id)
+  const storage = getStorage()
+  return await storage.deleteFile(id)
 }
 
 export async function updateFile(
   id: string,
   updates: Partial<MarkdownFile>
 ): Promise<void> {
-  const db = await getDB()
-  const existingFile = await db.get('files', id)
-
-  if (!existingFile) {
-    throw new Error(`File with id ${id} not found`)
-  }
-
-  await db.put('files', {
-    ...existingFile,
-    ...updates,
-    lastModified: Date.now(),
-  })
+  const storage = getStorage()
+  return await storage.updateFile(id, updates)
 }
 
 export async function clearAllFiles(): Promise<void> {
-  const db = await getDB()
-  await db.clear('files')
+  const storage = getStorage()
+  return await storage.clearAllFiles()
 }
