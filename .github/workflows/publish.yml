@@ -30,6 +30,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -43,7 +47,7 @@ jobs:
             org.opencontainers.image.title=DonkeyWork Markdown Editor
             org.opencontainers.image.description=Production-ready Markdown Editor with preview and export features
             org.opencontainers.image.vendor=DonkeyWork
-            org.opencontainers.image.version=0.1.0
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5

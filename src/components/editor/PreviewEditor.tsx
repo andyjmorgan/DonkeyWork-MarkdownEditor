@@ -43,9 +43,10 @@ interface PreviewEditorProps {
   className?: string
   onSave?: () => void
   onNew?: () => void
+  onOpen?: () => void
 }
 
-export function PreviewEditor({ content, onChange, className, onSave, onNew }: PreviewEditorProps) {
+export function PreviewEditor({ content, onChange, className, onSave, onNew, onOpen }: PreviewEditorProps) {
   const isUpdatingRef = useRef(false)
   const lastEmittedContentRef = useRef('')
 
@@ -126,7 +127,7 @@ export function PreviewEditor({ content, onChange, className, onSave, onNew }: P
   }, [editor, content])
 
   // Keyboard shortcuts
-  useKeyboardShortcuts({ editor, onSave, onNew })
+  useKeyboardShortcuts({ editor, onSave, onNew, onOpen })
 
   if (!editor) {
     return null

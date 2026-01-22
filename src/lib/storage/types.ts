@@ -58,6 +58,16 @@ export interface IStorageProvider {
    * Returns list of recently opened file paths
    */
   getRecentFiles?(): Promise<MarkdownFile[]>
+
+  /**
+   * Add a file to recent files (Tauri only)
+   */
+  addToRecentFiles?(filePath: string): Promise<void>
+
+  /**
+   * Clear recent files (Tauri only)
+   */
+  clearRecentFiles?(): Promise<void>
 }
 
 /**

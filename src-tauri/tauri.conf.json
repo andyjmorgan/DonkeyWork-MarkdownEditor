@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Markdown Editor",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "identifier": "com.donkeywork.markdowneditor",
   "build": {
     "frontendDist": "../dist",
@@ -34,6 +34,27 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "minimumSystemVersion": "10.13",
+      "exceptionDomain": null,
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": null
+    },
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown"],
+        "name": "Markdown Document",
+        "description": "Markdown text document",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
+    "shortDescription": "A beautiful markdown WYSIWYG editor",
+    "longDescription": "A beautiful, minimalistic markdown editor with live preview, split view editing, and Mermaid diagram support.",
+    "copyright": "© 2026 DonkeyWork",
+    "category": "DeveloperTool",
+    "publisher": "DonkeyWork"
   }
 }

@@ -5,9 +5,10 @@ interface UseKeyboardShortcutsProps {
   editor: Editor | null
   onSave?: () => void
   onNew?: () => void
+  onOpen?: () => void
 }
 
-export function useKeyboardShortcuts({ editor, onSave, onNew }: UseKeyboardShortcutsProps) {
+export function useKeyboardShortcuts({ editor, onSave, onNew, onOpen }: UseKeyboardShortcutsProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Use Cmd on Mac, Ctrl on Windows/Linux
@@ -26,6 +27,13 @@ export function useKeyboardShortcuts({ editor, onSave, onNew }: UseKeyboardShort
       if (event.key === 'n' || event.key === 'N') {
         event.preventDefault()
         onNew?.()
+        return
+      }
+
+      // Cmd/Ctrl + O - Open file
+      if (event.key === 'o' || event.key === 'O') {
+        event.preventDefault()
+        onOpen?.()
         return
       }
 
@@ -105,5 +113,5 @@ export function useKeyboardShortcuts({ editor, onSave, onNew }: UseKeyboardShort
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [editor, onSave, onNew])
+  }, [editor, onSave, onNew, onOpen])
 }

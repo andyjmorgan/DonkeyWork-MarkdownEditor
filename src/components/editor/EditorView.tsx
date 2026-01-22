@@ -24,7 +24,7 @@ interface EditorViewProps {
 
 export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps) {
   const activeFile = useFileStore((state) => state.getActiveFile())
-  const { saveFileContent, createNewFile } = useFileOperations()
+  const { saveFileContent, createNewFile, openFile } = useFileOperations()
   const [viewMode, setViewMode] = useState<ViewMode>('split')
   const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -72,6 +72,14 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
   const handleNew = useCallback(() => {
     setIsNewFileDialogOpen(true)
   }, [])
+
+  const handleOpen = useCallback(async () => {
+    try {
+      await openFile()
+    } catch (error) {
+      // Error is already logged in useFileOperations
+    }
+  }, [openFile])
 
   const handleCreateFile = useCallback(
     async (name: string) => {
@@ -188,6 +196,7 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
           className="flex-1 flex flex-col overflow-hidden"
           onSave={handleSave}
           onNew={handleNew}
+          onOpen={handleOpen}
         />
       </div>
     </div>

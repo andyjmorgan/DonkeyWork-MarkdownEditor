@@ -1,11 +1,13 @@
 import { IStorageProvider } from './types'
 import { IndexedDBProvider } from './indexeddb/provider'
+import { TauriFileSystemProvider } from './tauri/provider'
 
 /**
  * Detect if running in Tauri
  */
-function isTauri(): boolean {
-  return '__TAURI__' in window
+export function isTauri(): boolean {
+  // Tauri v2 uses __TAURI_INTERNALS__
+  return '__TAURI_INTERNALS__' in window || '__TAURI__' in window
 }
 
 /**
@@ -13,8 +15,7 @@ function isTauri(): boolean {
  */
 export function getStorageProvider(): IStorageProvider {
   if (isTauri()) {
-    // TODO: Return TauriFileSystemProvider once implemented
-    throw new Error('Tauri storage provider not yet implemented')
+    return new TauriFileSystemProvider()
   }
 
   return new IndexedDBProvider()

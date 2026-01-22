@@ -1,6 +1,6 @@
 [package]
 name = "markdown-editor"
-version = "0.1.0"
+version = "1.0.0"
 description = "A beautiful markdown WYSIWYG editor"
 authors = ["DonkeyWork"]
 license = "MIT"
@@ -23,3 +23,5 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.9.5", features = [] }
 tauri-plugin-log = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
