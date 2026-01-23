@@ -48,13 +48,14 @@ jobs:
   build-macos:
     needs: create-release
     strategy:
+      fail-fast: false
       matrix:
         include:
           - target: aarch64-apple-darwin
             runner: macos-latest
             arch: aarch64
           - target: x86_64-apple-darwin
-            runner: macos-latest
+            runner: macos-13
             arch: x86_64
     runs-on: ${{ matrix.runner }}
     permissions:
@@ -108,12 +109,18 @@ jobs:
             rm -rf "$TEMP_DMG_DIR"
           fi
 
+      - name: List built artifacts
+        run: |
+          echo "=== Listing bundle directory ==="
+          ls -la src-tauri/target/${{ matrix.target }}/release/bundle/macos/ || echo "Directory not found"
+          echo "=== Finding all DMG files ==="
+          find src-tauri -name "*.dmg" -type f 2>/dev/null || echo "No DMG files found"
+
       - name: Upload DMG to Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.create-release.outputs.version }}
-          files: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.dmg
+          files: src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -143,6 +150,14 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: List built artifacts
+        shell: pwsh
+        run: |
+          Write-Host "=== Listing bundle directory ==="
+          Get-ChildItem -Path src-tauri/target/release/bundle -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
+          Write-Host "=== Finding installer files ==="
+          Get-ChildItem -Path src-tauri -Recurse -Include *.msi,*.exe -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
 
       - name: Upload Windows installer to Release
         uses: softprops/action-gh-release@v1
