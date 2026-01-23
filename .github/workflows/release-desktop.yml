@@ -33,6 +33,12 @@ jobs:
             echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Delete existing release if exists
+        run: |
+          gh release delete v${{ steps.get-version.outputs.version }} --yes || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         id: create-release
         uses: softprops/action-gh-release@v1
@@ -78,7 +84,7 @@ jobs:
             runner: macos-latest
             arch: aarch64
           - target: x86_64-apple-darwin
-            runner: macos-13
+            runner: macos-14
             arch: x86_64
     runs-on: ${{ matrix.runner }}
     permissions:
