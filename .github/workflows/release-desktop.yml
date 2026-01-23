@@ -41,7 +41,30 @@ jobs:
           name: Markdown Editor v${{ steps.get-version.outputs.version }}
           draft: true
           prerelease: false
-          generate_release_notes: true
+          body: |
+            ## What's New
+
+            A beautiful, minimalistic markdown editor with live preview and native desktop support.
+
+            ### Features
+            - **Split View Editing** - Edit raw markdown and see live preview side-by-side
+            - **WYSIWYG Preview** - Rich text editing in the preview pane
+            - **Native File Dialogs** - Open and save files using system dialogs
+            - **File Associations** - Double-click .md files to open in the editor
+            - **Recent Files** - Quick access to recently opened documents
+            - **Mermaid Diagrams** - Create flowcharts, sequence diagrams, and more
+            - **PDF Export** - Export your documents to PDF
+            - **Dark/Light Theme** - Switch between themes to match your preference
+            - **Keyboard Shortcuts** - Cmd/Ctrl+S (save), Cmd/Ctrl+O (open), Cmd/Ctrl+N (new)
+
+            ### Downloads
+            - **macOS (Apple Silicon)**: `Markdown Editor_x.x.x_aarch64.dmg`
+            - **macOS (Intel)**: `Markdown Editor_x.x.x_x86_64.dmg`
+            - **Windows**: `.msi` or `.exe` installer
+
+            ### Installation
+            **macOS**: Download the DMG, open it, and drag the app to Applications.
+            **Windows**: Run the installer and follow the prompts.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
