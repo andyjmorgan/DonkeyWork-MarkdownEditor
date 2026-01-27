@@ -60,6 +60,44 @@ export function useFileOperations() {
     loadFiles()
   }, []) // Empty deps - only run on mount
 
+  // Listen for files opened via macOS "Open With" while the app is already running
+  useEffect(() => {
+    if (!isTauri()) return
+
+    let unlisten: (() => void) | undefined
+
+    const setup = async () => {
+      try {
+        const { listen } = await import('@tauri-apps/api/event')
+        unlisten = await listen<string[]>('file-opened', async (event) => {
+          const { invoke } = await import('@tauri-apps/api/core')
+          for (const filePath of event.payload) {
+            try {
+              const result = await invoke<{ path: string; name: string; content: string }>('read_file', { path: filePath })
+              const file: MarkdownFile = {
+                id: nanoid(),
+                name: result.name,
+                content: result.content,
+                lastModified: Date.now(),
+                isDirty: false,
+                filePath: result.path,
+                isUntitled: false,
+              }
+              addFile(file)
+            } catch (error) {
+              console.error('Failed to open file from event:', error)
+            }
+          }
+        })
+      } catch (error) {
+        console.error('Failed to set up file-opened listener:', error)
+      }
+    }
+
+    setup()
+    return () => { unlisten?.() }
+  }, []) // Empty deps - only run on mount
+
   const createNewFile = useCallback(
     async (name: string, content: string = '') => {
       const storage = getStorage()

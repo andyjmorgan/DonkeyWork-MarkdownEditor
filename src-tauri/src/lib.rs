@@ -1,11 +1,17 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use tauri::Manager;
+use std::sync::Mutex;
+use tauri::{Emitter, Manager, RunEvent};
 use tauri_plugin_dialog::DialogExt;
 
 const MAX_RECENT_FILES: usize = 10;
 const RECENT_FILES_FILENAME: &str = "recent_files.json";
+
+/// Holds file paths received via macOS Apple Events (Open With / double-click)
+/// before the frontend is ready to receive them.
+#[derive(Default)]
+struct OpenedFiles(Mutex<Vec<String>>);
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileResult {
@@ -182,32 +188,52 @@ fn clear_recent_files(app: tauri::AppHandle) -> Result<(), String> {
     save_recent_paths(&app, &[])
 }
 
-/// Get the file path if app was launched with a file argument
-#[tauri::command]
-fn get_opened_file() -> Option<FileResult> {
-    let args: Vec<String> = std::env::args().collect();
-
-    // Check if a file path was passed as argument (skip the first arg which is the executable)
-    for arg in args.iter().skip(1) {
-        let path = PathBuf::from(arg);
-        if path.exists() && path.is_file() {
-            if let Some(ext) = path.extension() {
-                let ext_str = ext.to_string_lossy().to_lowercase();
-                if ext_str == "md" || ext_str == "markdown" {
-                    if let Ok(content) = fs::read_to_string(&path) {
-                        let name = path
-                            .file_name()
-                            .and_then(|n| n.to_str())
-                            .unwrap_or("untitled.md")
-                            .to_string();
-                        return Some(FileResult {
-                            path: path.to_string_lossy().to_string(),
-                            name,
-                            content,
-                        });
-                    }
+/// Try to read a markdown file from a path string, returning a FileResult if valid
+fn read_markdown_path(path_str: &str) -> Option<FileResult> {
+    let path = PathBuf::from(path_str);
+    if path.exists() && path.is_file() {
+        if let Some(ext) = path.extension() {
+            let ext_str = ext.to_string_lossy().to_lowercase();
+            if ext_str == "md" || ext_str == "markdown" {
+                if let Ok(content) = fs::read_to_string(&path) {
+                    let name = path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("untitled.md")
+                        .to_string();
+                    return Some(FileResult {
+                        path: path.to_string_lossy().to_string(),
+                        name,
+                        content,
+                    });
                 }
             }
+        }
+    }
+    None
+}
+
+/// Get files that were opened via macOS "Open With" or CLI arguments.
+/// Checks both CLI args and any paths received via Apple Events before the frontend was ready.
+#[tauri::command]
+fn get_opened_file(state: tauri::State<'_, OpenedFiles>) -> Option<FileResult> {
+    // First check Apple Event state (macOS "Open With" / double-click)
+    {
+        let mut opened = state.0.lock().unwrap();
+        if let Some(path_str) = opened.pop() {
+            // Clear remaining since we only open one file at startup
+            opened.clear();
+            if let Some(result) = read_markdown_path(&path_str) {
+                return Some(result);
+            }
+        }
+    }
+
+    // Fallback: check CLI arguments (Linux/Windows or direct CLI invocation)
+    let args: Vec<String> = std::env::args().collect();
+    for arg in args.iter().skip(1) {
+        if let Some(result) = read_markdown_path(arg) {
+            return Some(result);
         }
     }
     None
@@ -218,6 +244,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .manage(OpenedFiles::default())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -238,6 +265,31 @@ pub fn run() {
             add_recent_file,
             clear_recent_files
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let RunEvent::Opened { urls } = &event {
+                // On macOS, file associations trigger Apple Events which arrive as URLs/paths
+                let paths: Vec<String> = urls
+                    .iter()
+                    .filter_map(|url| {
+                        // Convert file:// URLs to paths, or use as-is if already a path
+                        if url.scheme() == "file" {
+                            url.to_file_path().ok().map(|p| p.to_string_lossy().to_string())
+                        } else {
+                            Some(url.to_string())
+                        }
+                    })
+                    .collect();
+
+                // Store in state for the frontend to pick up on init
+                if let Some(state) = app.try_state::<OpenedFiles>() {
+                    let mut opened = state.0.lock().unwrap();
+                    opened.extend(paths.clone());
+                }
+
+                // Also emit event for when the app is already running
+                let _ = app.emit("file-opened", paths);
+            }
+        });
 }
