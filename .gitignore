@@ -24,4 +24,13 @@ dist-ssr
 *.sw?
 
 # Claude Code
+
+# Apple Code Signing
+APPLE_SIGNING_SECRETS.md
+*.key
+*.cer
+*.certSigningRequest
+*.p12
+certificate.p12
+
 .claude
