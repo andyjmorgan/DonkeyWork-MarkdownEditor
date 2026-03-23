@@ -38,8 +38,8 @@
     "macOS": {
       "minimumSystemVersion": "10.13",
       "exceptionDomain": null,
-      "signingIdentity": null,
-      "providerShortName": null,
+      "signingIdentity": "Developer ID Application: AndrewMorgan Ltd. (NYG9V7955H)",
+      "providerShortName": "NYG9V7955H",
       "entitlements": null
     },
     "fileAssociations": [
