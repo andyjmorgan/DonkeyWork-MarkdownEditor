@@ -104,32 +104,65 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Import Apple Developer Certificate
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
+          echo -n "$APPLE_CERTIFICATE" | base64 --decode -o $CERTIFICATE_PATH
+          security import $CERTIFICATE_PATH -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Tauri app
+      - name: Build and sign Tauri app
         id: build
         run: npm run tauri build -- --target ${{ matrix.target }}
-        continue-on-error: true
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: "Developer ID Application: AndrewMorgan Ltd. (NYG9V7955H)"
 
-      - name: Verify app was built
+      - name: Notarize macOS app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: NYG9V7955H
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
-          if [ ! -d "src-tauri/target/${{ matrix.target }}/release/bundle/macos/Markdown Editor.app" ]; then
-            echo "Error: App bundle was not created"
-            exit 1
+          DMG_PATH=$(find src-tauri/target/${{ matrix.target }}/release/bundle -name "*.dmg" -type f | head -1)
+          if [ -n "$DMG_PATH" ]; then
+            echo "Notarizing $DMG_PATH..."
+            xcrun notarytool submit "$DMG_PATH" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD" --wait
+            xcrun stapler staple "$DMG_PATH"
+          else
+            APP_PATH="src-tauri/target/${{ matrix.target }}/release/bundle/macos/Markdown Editor.app"
+            if [ -d "$APP_PATH" ]; then
+              ditto -c -k --keepParent "$APP_PATH" "$RUNNER_TEMP/app.zip"
+              xcrun notarytool submit "$RUNNER_TEMP/app.zip" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD" --wait
+              xcrun stapler staple "$APP_PATH"
+            fi
           fi
+
+      - name: Verify code signature
+        run: |
+          APP_PATH="src-tauri/target/${{ matrix.target }}/release/bundle/macos/Markdown Editor.app"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH" || echo "Warning: Code signature verification failed"
+          spctl --assess --type exec --verbose "$APP_PATH" || echo "Warning: Gatekeeper assessment failed"
 
       - name: Create DMG (fallback if Tauri bundler failed)
         run: |
           cd src-tauri/target/${{ matrix.target }}/release/bundle/macos
-          # Check if DMG already exists
           if ls Markdown\ Editor_*.dmg 1> /dev/null 2>&1; then
             echo "DMG already exists, skipping manual creation"
           else
-            echo "Creating DMG manually..."
             TEMP_DMG_DIR=$(mktemp -d)
             cp -R "Markdown Editor.app" "$TEMP_DMG_DIR/"
             ln -s /Applications "$TEMP_DMG_DIR/Applications"
@@ -138,13 +171,6 @@ jobs:
             rm -rf "$TEMP_DMG_DIR"
           fi
 
-      - name: List built artifacts
-        run: |
-          echo "=== Listing bundle directory ==="
-          ls -la src-tauri/target/${{ matrix.target }}/release/bundle/macos/ || echo "Directory not found"
-          echo "=== Finding all DMG files ==="
-          find src-tauri -name "*.dmg" -type f 2>/dev/null || echo "No DMG files found"
-
       - name: Upload DMG to Release
         uses: softprops/action-gh-release@v1
         with:
@@ -152,6 +178,11 @@ jobs:
           files: src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
 
   build-windows:
     needs: create-release
@@ -179,14 +210,6 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-
-      - name: List built artifacts
-        shell: pwsh
-        run: |
-          Write-Host "=== Listing bundle directory ==="
-          Get-ChildItem -Path src-tauri/target/release/bundle -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
-          Write-Host "=== Finding installer files ==="
-          Get-ChildItem -Path src-tauri -Recurse -Include *.msi,*.exe -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
 
       - name: Upload Windows installer to Release
         uses: softprops/action-gh-release@v1
