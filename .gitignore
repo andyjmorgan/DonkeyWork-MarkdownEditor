@@ -26,6 +26,7 @@ dist-ssr
 # Apple Code Signing
 APPLE_SIGNING_SECRETS.md
 *.key
+*.key.pub
 *.cer
 *.certSigningRequest
 *.p12

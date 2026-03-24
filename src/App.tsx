@@ -5,6 +5,7 @@ import { EditorView } from './components/editor/EditorView'
 import { useFileStore } from './store'
 import { useThemeStore } from './store'
 import { exportToPdf } from './lib/pdf/exporter'
+import { isTauri } from './lib/storage/provider'
 
 function App() {
   const tabs = useFileStore((state) => state.tabs)
@@ -20,6 +21,32 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [theme])
+
+  // Check for updates on launch (Tauri only)
+  useEffect(() => {
+    if (!isTauri()) return
+
+    const checkForUpdates = async () => {
+      try {
+        const { check } = await import('@tauri-apps/plugin-updater')
+        const update = await check()
+        if (update) {
+          const confirmed = window.confirm(
+            `A new version (${update.version}) is available. Would you like to update now?`
+          )
+          if (confirmed) {
+            await update.downloadAndInstall()
+            const { relaunch } = await import('@tauri-apps/plugin-process')
+            await relaunch()
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check for updates:', error)
+      }
+    }
+
+    checkForUpdates()
+  }, [])
 
   const handleDownloadMarkdown = useCallback(() => {
     if (!activeFile) return

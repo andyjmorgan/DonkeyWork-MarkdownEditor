@@ -62,10 +62,11 @@ jobs:
             - **PDF Export** - Export your documents to PDF
             - **Dark/Light Theme** - Switch between themes to match your preference
             - **Keyboard Shortcuts** - Cmd/Ctrl+S (save), Cmd/Ctrl+O (open), Cmd/Ctrl+N (new)
+            - **Auto Update** - Automatically checks for and installs updates
 
             ### Downloads
             - **macOS (Apple Silicon)**: `Markdown Editor_x.x.x_aarch64.dmg`
-  
+
             ### Installation
             **macOS**: Download the DMG, open it, and drag the app to Applications.
         env:
@@ -76,6 +77,8 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
+    outputs:
+      dmg_sig: ${{ steps.read-sig.outputs.dmg_sig }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -132,33 +135,31 @@ jobs:
           echo "=== Checking Gatekeeper assessment ==="
           spctl --assess --type exec --verbose "$APP_PATH" || echo "Warning: Gatekeeper assessment failed"
 
-      - name: Create DMG (fallback if Tauri bundler failed)
+      - name: Read update signature
+        id: read-sig
         run: |
-          cd src-tauri/target/aarch64-apple-darwin/release/bundle/macos
-          if ls Markdown\ Editor_*.dmg 1> /dev/null 2>&1; then
-            echo "DMG already exists, skipping manual creation"
+          SIG_FILE=$(find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.dmg.sig" -type f | head -1)
+          if [ -n "$SIG_FILE" ]; then
+            SIG=$(cat "$SIG_FILE")
+            echo "dmg_sig=$SIG" >> $GITHUB_OUTPUT
+            echo "Found signature: $SIG_FILE"
           else
-            echo "Creating DMG manually..."
-            TEMP_DMG_DIR=$(mktemp -d)
-            cp -R "Markdown Editor.app" "$TEMP_DMG_DIR/"
-            ln -s /Applications "$TEMP_DMG_DIR/Applications"
-            VERSION=$(node -p "require('../../../../../../package.json').version")
-            hdiutil create -volname "Markdown Editor" -srcfolder "$TEMP_DMG_DIR" -ov -format UDZO "Markdown Editor_${VERSION}_aarch64.dmg"
-            rm -rf "$TEMP_DMG_DIR"
+            echo "No .dmg.sig file found"
+            find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.sig" -type f
           fi
 
       - name: List built artifacts
         run: |
-          echo "=== Listing bundle directory ==="
-          ls -la src-tauri/target/aarch64-apple-darwin/release/bundle/macos/ || echo "Directory not found"
-          echo "=== Finding all DMG files ==="
-          find src-tauri -name "*.dmg" -type f 2>/dev/null || echo "No DMG files found"
+          echo "=== Finding all DMG and sig files ==="
+          find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.dmg" -o -name "*.sig" | sort
 
       - name: Upload DMG to Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.create-release.outputs.version }}
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          files: |
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.sig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -172,6 +173,9 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+    outputs:
+      msi_sig: ${{ steps.read-sig.outputs.msi_sig }}
+      nsis_sig: ${{ steps.read-sig.outputs.nsis_sig }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -194,13 +198,20 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
+      - name: Read update signatures
+        id: read-sig
+        shell: bash
+        run: |
+          MSI_SIG=$(find src-tauri/target/release/bundle/msi -name "*.msi.sig" -type f -exec cat {} \; 2>/dev/null | head -1)
+          NSIS_SIG=$(find src-tauri/target/release/bundle/nsis -name "*.exe.sig" -type f -exec cat {} \; 2>/dev/null | head -1)
+          echo "msi_sig=$MSI_SIG" >> $GITHUB_OUTPUT
+          echo "nsis_sig=$NSIS_SIG" >> $GITHUB_OUTPUT
+
       - name: List built artifacts
         shell: pwsh
         run: |
           Write-Host "=== Listing bundle directory ==="
           Get-ChildItem -Path src-tauri/target/release/bundle -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
-          Write-Host "=== Finding installer files ==="
-          Get-ChildItem -Path src-tauri -Recurse -Include *.msi,*.exe -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
 
       - name: Upload Windows installer to Release
         uses: softprops/action-gh-release@v1
@@ -208,7 +219,9 @@ jobs:
           tag_name: v${{ needs.create-release.outputs.version }}
           files: |
             src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/msi/*.sig
             src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/nsis/*.sig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -218,6 +231,41 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Generate latest.json for updater
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          REPO="andyjmorgan/DonkeyWork-MarkdownEditor"
+          BASE_URL="https://github.com/${REPO}/releases/download/v${VERSION}"
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          cat > latest.json << EOF
+          {
+            "version": "${VERSION}",
+            "notes": "Markdown Editor v${VERSION}",
+            "pub_date": "${DATE}",
+            "platforms": {
+              "darwin-aarch64": {
+                "signature": "${{ needs.build-macos.outputs.dmg_sig }}",
+                "url": "${BASE_URL}/Markdown.Editor_${VERSION}_aarch64.dmg"
+              },
+              "windows-x86_64": {
+                "signature": "${{ needs.build-windows.outputs.nsis_sig }}",
+                "url": "${BASE_URL}/Markdown.Editor_${VERSION}_x64-setup.exe"
+              }
+            }
+          }
+          EOF
+          echo "=== latest.json ==="
+          cat latest.json
+
+      - name: Upload latest.json to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.create-release.outputs.version }}
+          files: latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish Release
         uses: softprops/action-gh-release@v1
         with:
