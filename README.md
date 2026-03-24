@@ -1,116 +1,114 @@
-# DonkeyWork Markdown Editor
+# Markdown Editor
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18.2-61dafb)](https://reactjs.org/)
-
-A beautiful, minimalistic markdown WYSIWYG editor with split-view editing, live preview, and powerful features.
-
-**🚀 [Try it now at markdown.donkeywork.dev](https://markdown.donkeywork.dev)**
+A native desktop markdown editor with WYSIWYG editing, split-view, and live preview. Built with Tauri v2, React, and TypeScript.
 
 ## Features
 
-- **Dual-Pane Split View** - Edit raw markdown (CodeMirror) and see live WYSIWYG preview (Tiptap) side-by-side
-- **Real-time Sync** - Changes in either pane instantly reflect in the other
-- **Multi-File Tabs** - Work with multiple markdown files simultaneously
-- **Mermaid Diagrams** - Create flowcharts, sequence diagrams, and more
-- **GitHub Flavored Markdown** - Tables, task lists, strikethrough, and more
-- **Dark/Light Theme** - Beautiful themes with smooth transitions
-- **Auto-save** - Automatic saves every 3 seconds to IndexedDB
-- **PDF Export** - Export documents to PDF with one click
-- **Drag & Drop** - Import markdown files by dragging them in
-- **Offline-First** - Works completely offline with IndexedDB storage
+- **Split View Editing** -- Edit raw markdown (CodeMirror) alongside a live WYSIWYG preview (Tiptap), with changes synced in real time between both panes.
+- **Multi-Tab Interface** -- Work with multiple markdown files at once using a tabbed editor.
+- **Native File Dialogs** -- Open, save, and create files through system-native file dialogs powered by Tauri.
+- **File Associations** -- Double-click `.md` or `.markdown` files in your OS to open them directly in the editor.
+- **Recent Files** -- Quick access to recently opened documents from the file menu.
+- **Mermaid Diagrams** -- Render flowcharts, sequence diagrams, Gantt charts, and other Mermaid diagram types inline.
+- **GitHub Flavored Markdown** -- Full support for tables, task lists, strikethrough, and fenced code blocks.
+- **PDF Export** -- Export any document to PDF with a single click.
+- **Dark and Light Themes** -- Switch between dark and light themes with smooth transitions.
+- **Auto-Save** -- Files with a path on disk are automatically saved every 3 seconds.
+- **Keyboard Shortcuts** -- Standard shortcuts for all common operations (see below).
+- **Drag and Drop** -- Import markdown files by dragging them into the editor window.
 
 ## Tech Stack
 
-**Core:** React 18, TypeScript 5.2, Vite 5.0, TailwindCSS, Shadcn UI
+| Layer | Technology |
+|---|---|
+| Desktop runtime | Tauri v2 (Rust backend) |
+| Frontend framework | React 18, TypeScript 5 |
+| Build tool | Vite 5 |
+| Raw markdown editor | CodeMirror 6 |
+| WYSIWYG editor | Tiptap 3 |
+| Styling | TailwindCSS, Radix UI primitives |
+| State management | Zustand |
+| Diagram rendering | Mermaid |
+| PDF generation | jsPDF, html2canvas |
 
-**Editors:** CodeMirror 6 (raw), Tiptap 3 (WYSIWYG)
+## Platforms
 
-**Features:** Mermaid diagrams, jsPDF export, Zustand state, IndexedDB storage
+- **macOS** (Apple Silicon) -- code-signed and notarized DMG
+- **Windows** -- MSI and NSIS installers
 
-## Quick Start
+## Getting Started
 
-### Docker (Recommended)
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 20 or later
+- [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)
+- Platform-specific Tauri prerequisites: https://v2.tauri.app/start/prerequisites/
+
+### Development
 
 ```bash
-docker compose up
-```
-
-Visit `http://localhost:3000`
-
-### Local Development
-
-```bash
-# Install dependencies
 npm install
-
-# Start dev server
-npm run dev
+npm run tauri dev
 ```
 
-Visit `http://localhost:5173`
+The app will launch with hot-reload enabled. The Vite dev server runs at `http://localhost:5173` and the Tauri window connects to it automatically.
 
-### Build for Production
+### Production Build
 
 ```bash
-npm run build
-npm run preview
+npm run tauri build
 ```
 
-## Docker Deployment
-
-The application is available as a Docker image from GitHub Container Registry:
-
-```bash
-# Pull the latest image
-docker pull ghcr.io/andyjmorgan/donkeywork-markdowneditor:latest
-
-# Run with Docker
-docker run -p 3000:80 ghcr.io/andyjmorgan/donkeywork-markdowneditor:latest
-
-# Or use docker-compose
-docker compose up
-```
+Built artifacts (DMG, MSI, or NSIS installer) are placed in `src-tauri/target/release/bundle/`.
 
 ## Keyboard Shortcuts
 
 ### File Operations
-- `Ctrl/Cmd + N` - New file
-- `Ctrl/Cmd + S` - Save (immediate)
+
+| Shortcut | Action |
+|---|---|
+| Cmd/Ctrl + N | New file |
+| Cmd/Ctrl + O | Open file |
+| Cmd/Ctrl + S | Save file |
+| Cmd/Ctrl + Shift + S | Save as |
+| Cmd/Ctrl + W | Close tab |
 
 ### Formatting
-- `Ctrl/Cmd + B` - Bold
-- `Ctrl/Cmd + I` - Italic
-- `Ctrl/Cmd + U` - Underline
-- `Ctrl/Cmd + K` - Link
-- `Ctrl/Cmd + 1/2/3` - Headings
-- `Ctrl/Cmd + E` - Code block
-- `Ctrl/Cmd + Shift + L` - Bullet list
-- `Ctrl/Cmd + Shift + O` - Ordered list
-- `Ctrl/Cmd + Shift + T` - Task list
-- `Ctrl/Cmd + Shift + Q` - Blockquote
 
-## Browser Support
+| Shortcut | Action |
+|---|---|
+| Cmd/Ctrl + B | Bold |
+| Cmd/Ctrl + I | Italic |
+| Cmd/Ctrl + U | Underline |
+| Cmd/Ctrl + K | Insert link |
+| Cmd/Ctrl + E | Code block |
+| Cmd/Ctrl + 1/2/3 | Heading level 1/2/3 |
+| Cmd/Ctrl + Shift + L | Bullet list |
+| Cmd/Ctrl + Shift + O | Ordered list |
+| Cmd/Ctrl + Shift + T | Task list |
+| Cmd/Ctrl + Shift + Q | Blockquote |
 
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
+## Project Structure
 
-Requires IndexedDB support.
+```
+markitdown-editor/
+  src/                  # React frontend
+    components/         # UI components (editor, layout, dialogs, welcome)
+    hooks/              # Custom React hooks (file operations, autosave)
+    lib/                # Utilities and storage providers
+    store/              # Zustand state management
+    types/              # TypeScript type definitions
+  src-tauri/            # Tauri / Rust backend
+    src/lib.rs          # Tauri commands (file I/O, recent files, dialogs)
+    tauri.conf.json     # App configuration and bundle settings
+    icons/              # App icons for all platforms
+  .github/workflows/    # CI/CD (PR builds, releases, container publishing)
+```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+MIT
 
 ---
 
-Built with React, TypeScript, and Vite
+Built by [DonkeyWork](https://github.com/andyjmorgan).
