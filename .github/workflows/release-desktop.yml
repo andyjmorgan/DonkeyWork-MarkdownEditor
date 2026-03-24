@@ -158,7 +158,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.create-release.outputs.version }}
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.dmg
+          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
