@@ -240,8 +240,9 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|app, event| {
-            if let tauri::RunEvent::Opened { urls } = event {
+        .run(|_app, _event| {
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = _event {
                 for url in urls {
                     // file:// URLs from macOS file associations
                     if let Ok(path) = url.to_file_path() {
@@ -259,7 +260,7 @@ pub fn run() {
                                         name,
                                         content,
                                     };
-                                    let _ = app.emit("open-file", &file);
+                                    let _ = _app.emit("open-file", &file);
                                 }
                             }
                         }
