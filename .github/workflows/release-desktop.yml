@@ -78,7 +78,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      dmg_sig: ${{ steps.read-sig.outputs.dmg_sig }}
+      app_sig: ${{ steps.read-sig.outputs.app_sig }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -138,28 +138,29 @@ jobs:
       - name: Read update signature
         id: read-sig
         run: |
-          SIG_FILE=$(find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.dmg.sig" -type f | head -1)
+          SIG_FILE=$(find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.app.tar.gz.sig" -type f | head -1)
           if [ -n "$SIG_FILE" ]; then
             SIG=$(cat "$SIG_FILE")
-            echo "dmg_sig=$SIG" >> $GITHUB_OUTPUT
+            echo "app_sig=$SIG" >> $GITHUB_OUTPUT
             echo "Found signature: $SIG_FILE"
           else
-            echo "No .dmg.sig file found"
+            echo "No .app.tar.gz.sig file found"
             find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.sig" -type f
           fi
 
       - name: List built artifacts
         run: |
-          echo "=== Finding all DMG and sig files ==="
-          find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.dmg" -o -name "*.sig" | sort
+          echo "=== Finding all bundle files ==="
+          find src-tauri/target/aarch64-apple-darwin/release/bundle -name "*.dmg" -o -name "*.sig" -o -name "*.tar.gz" | sort
 
-      - name: Upload DMG to Release
+      - name: Upload macOS artifacts to Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.create-release.outputs.version }}
           files: |
             src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
-            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.sig
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.tar.gz
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.sig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -245,8 +246,8 @@ jobs:
             "pub_date": "${DATE}",
             "platforms": {
               "darwin-aarch64": {
-                "signature": "${{ needs.build-macos.outputs.dmg_sig }}",
-                "url": "${BASE_URL}/Markdown.Editor_${VERSION}_aarch64.dmg"
+                "signature": "${{ needs.build-macos.outputs.app_sig }}",
+                "url": "${BASE_URL}/Markdown.Editor.app.tar.gz"
               },
               "windows-x86_64": {
                 "signature": "${{ needs.build-windows.outputs.nsis_sig }}",
