@@ -8,9 +8,14 @@ use tauri_plugin_dialog::DialogExt;
 const MAX_RECENT_FILES: usize = 10;
 const RECENT_FILES_FILENAME: &str = "recent_files.json";
 
-/// Holds file paths received via macOS Apple Events before the frontend is ready
+/// Holds file paths received via macOS Apple Events before the frontend is ready.
+/// Once the frontend calls get_opened_file, `ready` is set to true and subsequent
+/// events are emitted directly instead of being buffered.
 #[derive(Default)]
-struct PendingFiles(Mutex<Vec<String>>);
+struct PendingFiles {
+    paths: Mutex<Vec<String>>,
+    ready: Mutex<bool>,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileResult {
@@ -214,14 +219,17 @@ fn read_markdown_path(path_str: &str) -> Option<FileResult> {
 
 /// Get the file path if app was launched with a file argument or via macOS file association.
 /// Checks buffered Apple Event paths first, then falls back to CLI args.
-/// Drains the buffer so files are only returned once.
+/// Marks the frontend as ready so subsequent RunEvent::Opened events are emitted directly.
 #[tauri::command]
 fn get_opened_file(state: tauri::State<'_, PendingFiles>) -> Option<FileResult> {
+    // Mark frontend as ready — future events will be emitted directly
+    *state.ready.lock().unwrap() = true;
+
     // Check buffered paths from Apple Events (macOS "Open With" / double-click)
     {
-        let mut pending = state.0.lock().unwrap();
+        let mut pending = state.paths.lock().unwrap();
         if let Some(path_str) = pending.pop() {
-            pending.clear(); // Only open one file at startup
+            pending.clear();
             if let Some(result) = read_markdown_path(&path_str) {
                 return Some(result);
             }
@@ -282,14 +290,17 @@ pub fn run() {
                     })
                     .collect();
 
-                // Buffer paths for get_opened_file (handles startup race condition)
                 if let Some(state) = _app.try_state::<PendingFiles>() {
-                    let mut pending = state.0.lock().unwrap();
-                    pending.extend(paths.clone());
+                    let is_ready = *state.ready.lock().unwrap();
+                    if is_ready {
+                        // Frontend is ready — emit event directly
+                        let _ = _app.emit("open-file", &paths);
+                    } else {
+                        // Frontend not ready yet — buffer for get_opened_file
+                        let mut pending = state.paths.lock().unwrap();
+                        pending.extend(paths);
+                    }
                 }
-
-                // Also emit event for when the app is already running with files open
-                let _ = _app.emit("open-file", &paths);
             }
         });
 }

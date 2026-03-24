@@ -41,12 +41,19 @@ export function useFileOperations() {
           console.error('Failed to check for opened file:', error)
         }
 
-        // Listen for file-open events (macOS file associations while app is running)
+        // Listen for file-open events (macOS file associations while app is already running)
         try {
           const { listen } = await import('@tauri-apps/api/event')
           const { invoke } = await import('@tauri-apps/api/core')
           listen<string[]>('open-file', async (event) => {
             for (const filePath of event.payload) {
+              // Skip if this file is already open
+              const currentFiles = useFileStore.getState().files
+              const alreadyOpen = Array.from(currentFiles.values()).some(
+                (f) => f.filePath === filePath
+              )
+              if (alreadyOpen) continue
+
               try {
                 const result = await invoke<{ path: string; name: string; content: string }>('read_file', { path: filePath })
                 const file: MarkdownFile = {
