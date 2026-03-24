@@ -41,21 +41,28 @@ export function useFileOperations() {
           console.error('Failed to check for opened file:', error)
         }
 
-        // Listen for file-open events (macOS file associations)
+        // Listen for file-open events (macOS file associations while app is running)
         try {
           const { listen } = await import('@tauri-apps/api/event')
-          listen<{ path: string; name: string; content: string }>('open-file', (event) => {
-            const openedFile = event.payload
-            const file: MarkdownFile = {
-              id: nanoid(),
-              name: openedFile.name,
-              content: openedFile.content,
-              lastModified: Date.now(),
-              isDirty: false,
-              filePath: openedFile.path,
-              isUntitled: false,
+          const { invoke } = await import('@tauri-apps/api/core')
+          listen<string[]>('open-file', async (event) => {
+            for (const filePath of event.payload) {
+              try {
+                const result = await invoke<{ path: string; name: string; content: string }>('read_file', { path: filePath })
+                const file: MarkdownFile = {
+                  id: nanoid(),
+                  name: result.name,
+                  content: result.content,
+                  lastModified: Date.now(),
+                  isDirty: false,
+                  filePath: result.path,
+                  isUntitled: false,
+                }
+                addFile(file)
+              } catch (error) {
+                console.error('Failed to open file from event:', error)
+              }
             }
-            addFile(file)
           })
         } catch (error) {
           console.error('Failed to listen for open-file events:', error)

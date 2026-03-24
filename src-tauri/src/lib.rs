@@ -1,11 +1,16 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Mutex;
 use tauri::{Emitter, Manager};
 use tauri_plugin_dialog::DialogExt;
 
 const MAX_RECENT_FILES: usize = 10;
 const RECENT_FILES_FILENAME: &str = "recent_files.json";
+
+/// Holds file paths received via macOS Apple Events before the frontend is ready
+#[derive(Default)]
+struct PendingFiles(Mutex<Vec<String>>);
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileResult {
@@ -182,32 +187,52 @@ fn clear_recent_files(app: tauri::AppHandle) -> Result<(), String> {
     save_recent_paths(&app, &[])
 }
 
-/// Get the file path if app was launched with a file argument
-#[tauri::command]
-fn get_opened_file() -> Option<FileResult> {
-    let args: Vec<String> = std::env::args().collect();
-
-    // Check if a file path was passed as argument (skip the first arg which is the executable)
-    for arg in args.iter().skip(1) {
-        let path = PathBuf::from(arg);
-        if path.exists() && path.is_file() {
-            if let Some(ext) = path.extension() {
-                let ext_str = ext.to_string_lossy().to_lowercase();
-                if ext_str == "md" || ext_str == "markdown" {
-                    if let Ok(content) = fs::read_to_string(&path) {
-                        let name = path
-                            .file_name()
-                            .and_then(|n| n.to_str())
-                            .unwrap_or("untitled.md")
-                            .to_string();
-                        return Some(FileResult {
-                            path: path.to_string_lossy().to_string(),
-                            name,
-                            content,
-                        });
-                    }
+/// Read a markdown file path into a FileResult if valid
+fn read_markdown_path(path_str: &str) -> Option<FileResult> {
+    let path = PathBuf::from(path_str);
+    if path.exists() && path.is_file() {
+        if let Some(ext) = path.extension() {
+            let ext_str = ext.to_string_lossy().to_lowercase();
+            if ext_str == "md" || ext_str == "markdown" {
+                if let Ok(content) = fs::read_to_string(&path) {
+                    let name = path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("untitled.md")
+                        .to_string();
+                    return Some(FileResult {
+                        path: path.to_string_lossy().to_string(),
+                        name,
+                        content,
+                    });
                 }
             }
+        }
+    }
+    None
+}
+
+/// Get the file path if app was launched with a file argument or via macOS file association.
+/// Checks buffered Apple Event paths first, then falls back to CLI args.
+/// Drains the buffer so files are only returned once.
+#[tauri::command]
+fn get_opened_file(state: tauri::State<'_, PendingFiles>) -> Option<FileResult> {
+    // Check buffered paths from Apple Events (macOS "Open With" / double-click)
+    {
+        let mut pending = state.0.lock().unwrap();
+        if let Some(path_str) = pending.pop() {
+            pending.clear(); // Only open one file at startup
+            if let Some(result) = read_markdown_path(&path_str) {
+                return Some(result);
+            }
+        }
+    }
+
+    // Fallback: check CLI arguments
+    let args: Vec<String> = std::env::args().collect();
+    for arg in args.iter().skip(1) {
+        if let Some(result) = read_markdown_path(arg) {
+            return Some(result);
         }
     }
     None
@@ -218,6 +243,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .manage(PendingFiles::default())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -242,30 +268,26 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|_app, _event| {
             #[cfg(target_os = "macos")]
-            if let tauri::RunEvent::Opened { urls } = _event {
-                for url in urls {
-                    // file:// URLs from macOS file associations
-                    if let Ok(path) = url.to_file_path() {
-                        if let Some(ext) = path.extension() {
-                            let ext_str = ext.to_string_lossy().to_lowercase();
-                            if ext_str == "md" || ext_str == "markdown" {
-                                if let Ok(content) = fs::read_to_string(&path) {
-                                    let name = path
-                                        .file_name()
-                                        .and_then(|n| n.to_str())
-                                        .unwrap_or("untitled.md")
-                                        .to_string();
-                                    let file = FileResult {
-                                        path: path.to_string_lossy().to_string(),
-                                        name,
-                                        content,
-                                    };
-                                    let _ = _app.emit("open-file", &file);
-                                }
-                            }
+            if let tauri::RunEvent::Opened { urls } = &_event {
+                let paths: Vec<String> = urls
+                    .iter()
+                    .filter_map(|url| {
+                        if url.scheme() == "file" {
+                            url.to_file_path().ok().map(|p| p.to_string_lossy().to_string())
+                        } else {
+                            Some(url.to_string())
                         }
-                    }
+                    })
+                    .collect();
+
+                // Buffer paths for get_opened_file (handles startup race condition)
+                if let Some(state) = _app.try_state::<PendingFiles>() {
+                    let mut pending = state.0.lock().unwrap();
+                    pending.extend(paths.clone());
                 }
+
+                // Also emit event for when the app is already running with files open
+                let _ = _app.emit("open-file", &paths);
             }
         });
 }
