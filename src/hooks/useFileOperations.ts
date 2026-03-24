@@ -40,6 +40,26 @@ export function useFileOperations() {
         } catch (error) {
           console.error('Failed to check for opened file:', error)
         }
+
+        // Listen for file-open events (macOS file associations)
+        try {
+          const { listen } = await import('@tauri-apps/api/event')
+          listen<{ path: string; name: string; content: string }>('open-file', (event) => {
+            const openedFile = event.payload
+            const file: MarkdownFile = {
+              id: nanoid(),
+              name: openedFile.name,
+              content: openedFile.content,
+              lastModified: Date.now(),
+              isDirty: false,
+              filePath: openedFile.path,
+              isUntitled: false,
+            }
+            addFile(file)
+          })
+        } catch (error) {
+          console.error('Failed to listen for open-file events:', error)
+        }
         return
       }
 

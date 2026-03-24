@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_dialog::DialogExt;
 
 const MAX_RECENT_FILES: usize = 10;
@@ -238,6 +238,33 @@ pub fn run() {
             add_recent_file,
             clear_recent_files
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let tauri::RunEvent::Opened { urls } = event {
+                for url in urls {
+                    // file:// URLs from macOS file associations
+                    if let Ok(path) = url.to_file_path() {
+                        if let Some(ext) = path.extension() {
+                            let ext_str = ext.to_string_lossy().to_lowercase();
+                            if ext_str == "md" || ext_str == "markdown" {
+                                if let Ok(content) = fs::read_to_string(&path) {
+                                    let name = path
+                                        .file_name()
+                                        .and_then(|n| n.to_str())
+                                        .unwrap_or("untitled.md")
+                                        .to_string();
+                                    let file = FileResult {
+                                        path: path.to_string_lossy().to_string(),
+                                        name,
+                                        content,
+                                    };
+                                    let _ = app.emit("open-file", &file);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
 }
