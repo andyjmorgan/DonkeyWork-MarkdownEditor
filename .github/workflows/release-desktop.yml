@@ -65,28 +65,15 @@ jobs:
 
             ### Downloads
             - **macOS (Apple Silicon)**: `Markdown Editor_x.x.x_aarch64.dmg`
-            - **macOS (Intel)**: `Markdown Editor_x.x.x_x86_64.dmg`
-            - **Windows**: `.msi` or `.exe` installer
-
+  
             ### Installation
             **macOS**: Download the DMG, open it, and drag the app to Applications.
-            **Windows**: Run the installer and follow the prompts.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-macos:
     needs: create-release
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: aarch64-apple-darwin
-            runner: macos-latest
-            arch: aarch64
-          - target: x86_64-apple-darwin
-            runner: macos-14
-            arch: x86_64
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-latest
     permissions:
       contents: write
     steps:
@@ -102,7 +89,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: aarch64-apple-darwin
 
       - name: Import Apple Developer Certificate
         env:
@@ -128,7 +115,7 @@ jobs:
 
       - name: Build, sign, and notarize Tauri app
         id: build
-        run: npm run tauri build -- --target ${{ matrix.target }}
+        run: npm run tauri build -- --target aarch64-apple-darwin
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -139,7 +126,7 @@ jobs:
 
       - name: Verify code signature
         run: |
-          APP_PATH="src-tauri/target/${{ matrix.target }}/release/bundle/macos/Markdown Editor.app"
+          APP_PATH="src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Markdown Editor.app"
           echo "=== Verifying code signature ==="
           codesign --verify --deep --strict --verbose=2 "$APP_PATH" || echo "Warning: Code signature verification failed"
           echo "=== Checking Gatekeeper assessment ==="
@@ -147,7 +134,7 @@ jobs:
 
       - name: Create DMG (fallback if Tauri bundler failed)
         run: |
-          cd src-tauri/target/${{ matrix.target }}/release/bundle/macos
+          cd src-tauri/target/aarch64-apple-darwin/release/bundle/macos
           if ls Markdown\ Editor_*.dmg 1> /dev/null 2>&1; then
             echo "DMG already exists, skipping manual creation"
           else
@@ -156,14 +143,14 @@ jobs:
             cp -R "Markdown Editor.app" "$TEMP_DMG_DIR/"
             ln -s /Applications "$TEMP_DMG_DIR/Applications"
             VERSION=$(node -p "require('../../../../../../package.json').version")
-            hdiutil create -volname "Markdown Editor" -srcfolder "$TEMP_DMG_DIR" -ov -format UDZO "Markdown Editor_${VERSION}_${{ matrix.arch }}.dmg"
+            hdiutil create -volname "Markdown Editor" -srcfolder "$TEMP_DMG_DIR" -ov -format UDZO "Markdown Editor_${VERSION}_aarch64.dmg"
             rm -rf "$TEMP_DMG_DIR"
           fi
 
       - name: List built artifacts
         run: |
           echo "=== Listing bundle directory ==="
-          ls -la src-tauri/target/${{ matrix.target }}/release/bundle/macos/ || echo "Directory not found"
+          ls -la src-tauri/target/aarch64-apple-darwin/release/bundle/macos/ || echo "Directory not found"
           echo "=== Finding all DMG files ==="
           find src-tauri -name "*.dmg" -type f 2>/dev/null || echo "No DMG files found"
 
@@ -171,7 +158,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.create-release.outputs.version }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.dmg
+          files: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
