@@ -49,10 +49,10 @@ jobs:
         include:
           - runner: macos-latest
             target: aarch64-apple-darwin
-            tauri-args: --target aarch64-apple-darwin --bundles app,dmg
+            tauri-args: --target aarch64-apple-darwin
           - runner: windows-latest
             target: ''
-            tauri-args: --bundles msi,nsis
+            tauri-args: ''
     runs-on: ${{ matrix.runner }}
 
     steps:
@@ -79,7 +79,8 @@ jobs:
         run: npm ci
 
       - name: Build Tauri app (debug)
-        run: npm run tauri build -- --debug ${{ matrix.tauri-args }}
+        shell: bash
+        run: npm run tauri build -- --debug ${{ matrix.tauri-args }} --config '{"bundle":{"createUpdaterArtifacts":false}}'
         env:
           # Ad-hoc sign on macOS so PRs don't need the signing cert
           APPLE_SIGNING_IDENTITY: '-'
