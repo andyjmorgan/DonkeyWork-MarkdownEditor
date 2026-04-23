@@ -1,98 +1,19 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { nanoid } from 'nanoid'
 import { saveAs as downloadFile } from 'file-saver'
 import { useFileStore } from '@/store'
 import { MarkdownFile } from '@/types'
 import * as db from '@/lib/db/fileStore'
-import { initDB } from '@/lib/db'
 import { getStorage, isTauri } from '@/lib/storage/provider'
 
 export function useFileOperations() {
   const {
     addFile,
-    loadFile,
     updateFile,
     removeFile,
     files,
     activeFileId,
   } = useFileStore()
-
-  // Initialize DB and load files on mount
-  useEffect(() => {
-    const loadFiles = async () => {
-      // In Tauri mode, check if app was opened with a file
-      if (isTauri()) {
-        try {
-          const { invoke } = await import('@tauri-apps/api/core')
-          const openedFile = await invoke<{ path: string; name: string; content: string } | null>('get_opened_file')
-          if (openedFile) {
-            const file: MarkdownFile = {
-              id: nanoid(),
-              name: openedFile.name,
-              content: openedFile.content,
-              lastModified: Date.now(),
-              isDirty: false,
-              filePath: openedFile.path,
-              isUntitled: false,
-            }
-            addFile(file)
-          }
-        } catch (error) {
-          console.error('Failed to check for opened file:', error)
-        }
-
-        // Listen for file-open events (macOS file associations while app is already running)
-        try {
-          const { listen } = await import('@tauri-apps/api/event')
-          const { invoke } = await import('@tauri-apps/api/core')
-          listen<string[]>('open-file', async (event) => {
-            for (const filePath of event.payload) {
-              // Skip if this file is already open
-              const currentFiles = useFileStore.getState().files
-              const alreadyOpen = Array.from(currentFiles.values()).some(
-                (f) => f.filePath === filePath
-              )
-              if (alreadyOpen) continue
-
-              try {
-                const result = await invoke<{ path: string; name: string; content: string }>('read_file', { path: filePath })
-                const file: MarkdownFile = {
-                  id: nanoid(),
-                  name: result.name,
-                  content: result.content,
-                  lastModified: Date.now(),
-                  isDirty: false,
-                  filePath: result.path,
-                  isUntitled: false,
-                }
-                addFile(file)
-              } catch (error) {
-                console.error('Failed to open file from event:', error)
-              }
-            }
-          })
-        } catch (error) {
-          console.error('Failed to listen for open-file events:', error)
-        }
-        return
-      }
-
-      // Web mode: load from IndexedDB
-      try {
-        await initDB()
-        const savedFiles = await db.getAllFiles()
-
-        // Load all saved files into the store WITHOUT opening them in tabs
-        savedFiles.forEach((file) => {
-          loadFile({ ...file, isDirty: false })
-        })
-      } catch (error) {
-        console.error('Failed to load files from IndexedDB:', error)
-      }
-    }
-
-    loadFiles()
-  }, []) // Empty deps - only run on mount
 
   const createNewFile = useCallback(
     async (name: string, content: string = '') => {
