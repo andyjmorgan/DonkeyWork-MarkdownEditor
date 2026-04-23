@@ -40,7 +40,7 @@
       "exceptionDomain": null,
       "signingIdentity": "Developer ID Application: AndrewMorgan Ltd. (NYG9V7955H)",
       "providerShortName": "NYG9V7955H",
-      "entitlements": null
+      "entitlements": "Entitlements.plist"
     },
     "fileAssociations": [
       {
@@ -55,6 +55,15 @@
     "longDescription": "A beautiful, minimalistic markdown editor with live preview, split view editing, and Mermaid diagram support.",
     "copyright": "© 2026 DonkeyWork",
     "category": "DeveloperTool",
-    "publisher": "DonkeyWork"
+    "publisher": "DonkeyWork",
+    "createUpdaterArtifacts": "v1Compatible"
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk3RTdFQjBBMENEQzQ5REQKUldUZFNkd01DdXZubDZWc0dRUVNUN1ZldEhDY3hqZ2I5cVdpWWZnUjJYeDZVR1dJaDZhdit2dDcK",
+      "endpoints": [
+        "https://github.com/andyjmorgan/DonkeyWork-MarkdownEditor/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

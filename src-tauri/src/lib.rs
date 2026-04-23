@@ -2,16 +2,20 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{Emitter, Manager, RunEvent};
+use tauri::{Emitter, Manager};
 use tauri_plugin_dialog::DialogExt;
 
 const MAX_RECENT_FILES: usize = 10;
 const RECENT_FILES_FILENAME: &str = "recent_files.json";
 
-/// Holds file paths received via macOS Apple Events (Open With / double-click)
-/// before the frontend is ready to receive them.
+/// Holds file paths received via macOS Apple Events before the frontend is ready.
+/// Once the frontend calls get_opened_file, `ready` is set to true and subsequent
+/// events are emitted directly instead of being buffered.
 #[derive(Default)]
-struct OpenedFiles(Mutex<Vec<String>>);
+struct PendingFiles {
+    paths: Mutex<Vec<String>>,
+    ready: Mutex<bool>,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileResult {
@@ -188,7 +192,7 @@ fn clear_recent_files(app: tauri::AppHandle) -> Result<(), String> {
     save_recent_paths(&app, &[])
 }
 
-/// Try to read a markdown file from a path string, returning a FileResult if valid
+/// Read a markdown file path into a FileResult if valid
 fn read_markdown_path(path_str: &str) -> Option<FileResult> {
     let path = PathBuf::from(path_str);
     if path.exists() && path.is_file() {
@@ -213,23 +217,26 @@ fn read_markdown_path(path_str: &str) -> Option<FileResult> {
     None
 }
 
-/// Get files that were opened via macOS "Open With" or CLI arguments.
-/// Checks both CLI args and any paths received via Apple Events before the frontend was ready.
+/// Get the file path if app was launched with a file argument or via macOS file association.
+/// Checks buffered Apple Event paths first, then falls back to CLI args.
+/// Marks the frontend as ready so subsequent RunEvent::Opened events are emitted directly.
 #[tauri::command]
-fn get_opened_file(state: tauri::State<'_, OpenedFiles>) -> Option<FileResult> {
-    // First check Apple Event state (macOS "Open With" / double-click)
+fn get_opened_file(state: tauri::State<'_, PendingFiles>) -> Option<FileResult> {
+    // Mark frontend as ready — future events will be emitted directly
+    *state.ready.lock().unwrap() = true;
+
+    // Check buffered paths from Apple Events (macOS "Open With" / double-click)
     {
-        let mut opened = state.0.lock().unwrap();
-        if let Some(path_str) = opened.pop() {
-            // Clear remaining since we only open one file at startup
-            opened.clear();
+        let mut pending = state.paths.lock().unwrap();
+        if let Some(path_str) = pending.pop() {
+            pending.clear();
             if let Some(result) = read_markdown_path(&path_str) {
                 return Some(result);
             }
         }
     }
 
-    // Fallback: check CLI arguments (Linux/Windows or direct CLI invocation)
+    // Fallback: check CLI arguments
     let args: Vec<String> = std::env::args().collect();
     for arg in args.iter().skip(1) {
         if let Some(result) = read_markdown_path(arg) {
@@ -244,7 +251,9 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(OpenedFiles::default())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
+        .manage(PendingFiles::default())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -267,13 +276,12 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|app, event| {
-            if let RunEvent::Opened { urls } = &event {
-                // On macOS, file associations trigger Apple Events which arrive as URLs/paths
+        .run(|_app, _event| {
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = &_event {
                 let paths: Vec<String> = urls
                     .iter()
                     .filter_map(|url| {
-                        // Convert file:// URLs to paths, or use as-is if already a path
                         if url.scheme() == "file" {
                             url.to_file_path().ok().map(|p| p.to_string_lossy().to_string())
                         } else {
@@ -282,14 +290,17 @@ pub fn run() {
                     })
                     .collect();
 
-                // Store in state for the frontend to pick up on init
-                if let Some(state) = app.try_state::<OpenedFiles>() {
-                    let mut opened = state.0.lock().unwrap();
-                    opened.extend(paths.clone());
+                if let Some(state) = _app.try_state::<PendingFiles>() {
+                    let is_ready = *state.ready.lock().unwrap();
+                    if is_ready {
+                        // Frontend is ready — emit event directly
+                        let _ = _app.emit("open-file", &paths);
+                    } else {
+                        // Frontend not ready yet — buffer for get_opened_file
+                        let mut pending = state.paths.lock().unwrap();
+                        pending.extend(paths);
+                    }
                 }
-
-                // Also emit event for when the app is already running
-                let _ = app.emit("file-opened", paths);
             }
         });
 }

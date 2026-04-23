@@ -40,6 +40,40 @@ export function useFileOperations() {
         } catch (error) {
           console.error('Failed to check for opened file:', error)
         }
+
+        // Listen for file-open events (macOS file associations while app is already running)
+        try {
+          const { listen } = await import('@tauri-apps/api/event')
+          const { invoke } = await import('@tauri-apps/api/core')
+          listen<string[]>('open-file', async (event) => {
+            for (const filePath of event.payload) {
+              // Skip if this file is already open
+              const currentFiles = useFileStore.getState().files
+              const alreadyOpen = Array.from(currentFiles.values()).some(
+                (f) => f.filePath === filePath
+              )
+              if (alreadyOpen) continue
+
+              try {
+                const result = await invoke<{ path: string; name: string; content: string }>('read_file', { path: filePath })
+                const file: MarkdownFile = {
+                  id: nanoid(),
+                  name: result.name,
+                  content: result.content,
+                  lastModified: Date.now(),
+                  isDirty: false,
+                  filePath: result.path,
+                  isUntitled: false,
+                }
+                addFile(file)
+              } catch (error) {
+                console.error('Failed to open file from event:', error)
+              }
+            }
+          })
+        } catch (error) {
+          console.error('Failed to listen for open-file events:', error)
+        }
         return
       }
 
@@ -58,44 +92,6 @@ export function useFileOperations() {
     }
 
     loadFiles()
-  }, []) // Empty deps - only run on mount
-
-  // Listen for files opened via macOS "Open With" while the app is already running
-  useEffect(() => {
-    if (!isTauri()) return
-
-    let unlisten: (() => void) | undefined
-
-    const setup = async () => {
-      try {
-        const { listen } = await import('@tauri-apps/api/event')
-        unlisten = await listen<string[]>('file-opened', async (event) => {
-          const { invoke } = await import('@tauri-apps/api/core')
-          for (const filePath of event.payload) {
-            try {
-              const result = await invoke<{ path: string; name: string; content: string }>('read_file', { path: filePath })
-              const file: MarkdownFile = {
-                id: nanoid(),
-                name: result.name,
-                content: result.content,
-                lastModified: Date.now(),
-                isDirty: false,
-                filePath: result.path,
-                isUntitled: false,
-              }
-              addFile(file)
-            } catch (error) {
-              console.error('Failed to open file from event:', error)
-            }
-          }
-        })
-      } catch (error) {
-        console.error('Failed to set up file-opened listener:', error)
-      }
-    }
-
-    setup()
-    return () => { unlisten?.() }
   }, []) // Empty deps - only run on mount
 
   const createNewFile = useCallback(

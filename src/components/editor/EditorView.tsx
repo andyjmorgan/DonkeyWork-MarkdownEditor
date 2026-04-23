@@ -7,7 +7,8 @@ import { NewFileDialog } from '@/components/dialogs/NewFileDialog'
 import { useFileStore } from '@/store'
 import { useFileOperations } from '@/hooks/useFileOperations'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { Download } from 'lucide-react'
+import { isTauri } from '@/lib/storage/provider'
+import { Download, FileOutput } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
   const [viewMode, setViewMode] = useState<ViewMode>('split')
   const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const isDesktop = isTauri()
 
   // Force code or preview mode on mobile (no split)
   useEffect(() => {
@@ -119,22 +121,29 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
           {viewMode !== 'split' && (
             <div className="flex items-center gap-2">
               <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
-                    <Download className="h-3.5 w-3.5 mr-1.5" />
-                    Download
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={onDownloadMarkdown}>
-                    Download as Markdown
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onExportPdf}>
-                    Export as PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {isDesktop ? (
+                <Button variant="ghost" size="sm" className="h-7 px-3 text-xs" onClick={onExportPdf}>
+                  <FileOutput className="h-3.5 w-3.5 mr-1.5" />
+                  Export PDF
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
+                      <Download className="h-3.5 w-3.5 mr-1.5" />
+                      Download
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={onDownloadMarkdown}>
+                      Download as Markdown
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onExportPdf}>
+                      Export as PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           )}
         </div>
@@ -169,22 +178,29 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
           {viewMode !== 'split' && (
             <div className="flex items-center gap-2">
               <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
-                    <Download className="h-3.5 w-3.5 mr-1.5" />
-                    Download
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={onDownloadMarkdown}>
-                    Download as Markdown
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onExportPdf}>
-                    Export as PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {isDesktop ? (
+                <Button variant="ghost" size="sm" className="h-7 px-3 text-xs" onClick={onExportPdf}>
+                  <FileOutput className="h-3.5 w-3.5 mr-1.5" />
+                  Export PDF
+                </Button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
+                      <Download className="h-3.5 w-3.5 mr-1.5" />
+                      Download
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={onDownloadMarkdown}>
+                      Download as Markdown
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onExportPdf}>
+                      Export as PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           )}
         </div>

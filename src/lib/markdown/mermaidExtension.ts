@@ -69,6 +69,7 @@ export const MermaidNode = Node.create({
     return {
       setMermaid:
         (attributes?: { code?: string }) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ({ commands }: any) => {
           const code = attributes?.code || 'graph TD\n  A[Start] --> B[End]'
           return commands.insertContent({
