@@ -1,10 +1,14 @@
 import { useEffect, useCallback } from 'react'
+import { nanoid } from 'nanoid'
 import { AppLayout } from './components/layout/AppLayout'
 import { WelcomeScreen } from './components/welcome/WelcomeScreen'
 import { EditorView } from './components/editor/EditorView'
 import { useFileStore } from './store'
 import { useThemeStore } from './store'
+import { MarkdownFile } from './types'
 import { exportToPdf } from './lib/pdf/exporter'
+import * as db from './lib/db/fileStore'
+import { initDB } from './lib/db'
 import { isTauri } from './lib/storage/provider'
 
 function App() {
@@ -21,6 +25,84 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [theme])
+
+  // Load persisted files (web) or the file the app was launched with (Tauri), and subscribe
+  // to macOS "Open With" events. Mounted exactly once at the App root so only a single
+  // listener is registered regardless of how many components consume useFileOperations.
+  useEffect(() => {
+    const { addFile, loadFile } = useFileStore.getState()
+
+    if (isTauri()) {
+      let unlisten: (() => void) | undefined
+      ;(async () => {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core')
+          const openedFile = await invoke<{ path: string; name: string; content: string } | null>('get_opened_file')
+          if (openedFile) {
+            const file: MarkdownFile = {
+              id: nanoid(),
+              name: openedFile.name,
+              content: openedFile.content,
+              lastModified: Date.now(),
+              isDirty: false,
+              filePath: openedFile.path,
+              isUntitled: false,
+            }
+            addFile(file)
+          }
+        } catch (error) {
+          console.error('Failed to check for opened file:', error)
+        }
+
+        try {
+          const { listen } = await import('@tauri-apps/api/event')
+          const { invoke } = await import('@tauri-apps/api/core')
+          unlisten = await listen<string[]>('open-file', async (event) => {
+            for (const filePath of event.payload) {
+              const currentFiles = useFileStore.getState().files
+              const alreadyOpen = Array.from(currentFiles.values()).some(
+                (f) => f.filePath === filePath
+              )
+              if (alreadyOpen) continue
+
+              try {
+                const result = await invoke<{ path: string; name: string; content: string }>('read_file', { path: filePath })
+                const file: MarkdownFile = {
+                  id: nanoid(),
+                  name: result.name,
+                  content: result.content,
+                  lastModified: Date.now(),
+                  isDirty: false,
+                  filePath: result.path,
+                  isUntitled: false,
+                }
+                addFile(file)
+              } catch (error) {
+                console.error('Failed to open file from event:', error)
+              }
+            }
+          })
+        } catch (error) {
+          console.error('Failed to listen for open-file events:', error)
+        }
+      })()
+
+      return () => { unlisten?.() }
+    }
+
+    // Web: restore IndexedDB-backed files into the store without opening tabs.
+    ;(async () => {
+      try {
+        await initDB()
+        const savedFiles = await db.getAllFiles()
+        savedFiles.forEach((file) => {
+          loadFile({ ...file, isDirty: false })
+        })
+      } catch (error) {
+        console.error('Failed to load files from IndexedDB:', error)
+      }
+    })()
+  }, [])
 
   // Check for updates on launch (Tauri only)
   useEffect(() => {
