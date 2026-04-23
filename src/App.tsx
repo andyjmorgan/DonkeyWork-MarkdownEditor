@@ -34,7 +34,8 @@ function App() {
 
     if (isTauri()) {
       let unlisten: (() => void) | undefined
-      ;(async () => {
+
+      const initTauri = async () => {
         try {
           const { invoke } = await import('@tauri-apps/api/core')
           const openedFile = await invoke<{ path: string; name: string; content: string } | null>('get_opened_file')
@@ -85,13 +86,15 @@ function App() {
         } catch (error) {
           console.error('Failed to listen for open-file events:', error)
         }
-      })()
+      }
+
+      initTauri()
 
       return () => { unlisten?.() }
     }
 
     // Web: restore IndexedDB-backed files into the store without opening tabs.
-    ;(async () => {
+    const initWeb = async () => {
       try {
         await initDB()
         const savedFiles = await db.getAllFiles()
@@ -101,7 +104,9 @@ function App() {
       } catch (error) {
         console.error('Failed to load files from IndexedDB:', error)
       }
-    })()
+    }
+
+    initWeb()
   }, [])
 
   // Check for updates on launch (Tauri only)
