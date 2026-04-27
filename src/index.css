@@ -150,3 +150,82 @@
     display: none;
   }
 }
+
+/* Print-only container that we clone the preview HTML into right before window.print().
+   Hidden on screen; promoted to the only visible element when the OS print pipeline runs. */
+#print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 18mm;
+  }
+
+  body > *:not(#print-root) {
+    display: none !important;
+  }
+
+  #print-root {
+    display: block !important;
+    color: #000 !important;
+    background: #fff !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+  }
+
+  #print-root *,
+  #print-root *::before,
+  #print-root *::after {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #print-root pre {
+    background: #f4f4f4 !important;
+    border: 1px solid #ddd;
+    padding: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  #print-root code {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.9em;
+  }
+
+  #print-root img,
+  #print-root svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Hide interactive chrome embedded in the preview (copy buttons, mermaid toolbars, etc.) */
+  #print-root button,
+  #print-root [contenteditable]::after,
+  #print-root .ProseMirror-widget {
+    display: none !important;
+  }
+
+  /* Keep block-level content from splitting across pages. */
+  #print-root pre,
+  #print-root table,
+  #print-root img,
+  #print-root svg,
+  #print-root figure,
+  #print-root blockquote,
+  #print-root .mermaid-diagram,
+  #print-root .mermaid-diagram-pdf {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  #print-root h1,
+  #print-root h2,
+  #print-root h3,
+  #print-root h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}

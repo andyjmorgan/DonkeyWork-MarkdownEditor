@@ -135,14 +135,29 @@ function App() {
     checkForUpdates()
   }, [])
 
-  const handleDownloadMarkdown = useCallback(() => {
+  const handleExportMarkdown = useCallback(async () => {
     if (!activeFile) return
+
+    const defaultName = activeFile.name.endsWith('.md') ? activeFile.name : `${activeFile.name}.md`
+
+    if (isTauri()) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core')
+        const path = await invoke<string | null>('save_file_dialog', { defaultName })
+        if (!path) return
+        await invoke('write_file', { path, content: activeFile.content })
+      } catch (error) {
+        console.error('Failed to export markdown:', error)
+        alert('Failed to export markdown. Please try again.')
+      }
+      return
+    }
 
     const blob = new Blob([activeFile.content], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = activeFile.name.endsWith('.md') ? activeFile.name : `${activeFile.name}.md`
+    a.download = defaultName
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -152,16 +167,39 @@ function App() {
   const handleExportPdf = useCallback(async () => {
     if (!activeFile) return
 
+    const defaultName = activeFile.name.endsWith('.md')
+      ? activeFile.name.replace('.md', '.pdf')
+      : `${activeFile.name}.pdf`
+
     try {
-      const filename = activeFile.name.endsWith('.md')
-        ? activeFile.name.replace('.md', '.pdf')
-        : `${activeFile.name}.pdf`
+      if (isTauri()) {
+        // Clone the live preview DOM into a body-level container that the print
+        // stylesheet promotes as the sole visible element. WebKit then runs its
+        // native print pipeline on that container — fast, vector-quality, and
+        // honors CSS page-break rules.
+        const preview = document.querySelector<HTMLElement>('.ProseMirror')
+        if (!preview) {
+          alert('No preview content to export.')
+          return
+        }
+        const printRoot = document.createElement('div')
+        printRoot.id = 'print-root'
+        printRoot.innerHTML = preview.innerHTML
+        document.body.appendChild(printRoot)
+        try {
+          window.print()
+        } finally {
+          document.body.removeChild(printRoot)
+        }
+        return
+      }
 
       await exportToPdf({
         markdown: activeFile.content,
-        filename,
+        filename: defaultName,
       })
     } catch (error) {
+      console.error('Failed to export PDF:', error)
       alert('Failed to export PDF. Please try again.')
     }
   }, [activeFile])
@@ -170,7 +208,7 @@ function App() {
     <AppLayout showTabs={hasOpenFiles}>
       {hasOpenFiles ? (
         <EditorView
-          onDownloadMarkdown={handleDownloadMarkdown}
+          onExportMarkdown={handleExportMarkdown}
           onExportPdf={handleExportPdf}
         />
       ) : (

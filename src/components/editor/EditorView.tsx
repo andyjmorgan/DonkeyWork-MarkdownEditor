@@ -18,12 +18,39 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DEFAULT_FILE_CONTENT } from '@/lib/constants'
 
-interface EditorViewProps {
-  onDownloadMarkdown: () => void
+interface ExportMenuProps {
+  isDesktop: boolean
+  onExportMarkdown: () => void
   onExportPdf: () => void
 }
 
-export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps) {
+function ExportMenu({ isDesktop, onExportMarkdown, onExportPdf }: ExportMenuProps) {
+  const Icon = isDesktop ? FileOutput : Download
+  const label = isDesktop ? 'Export' : 'Download'
+  const markdownLabel = isDesktop ? 'Export as Markdown' : 'Download as Markdown'
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
+          <Icon className="h-3.5 w-3.5 mr-1.5" />
+          {label}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onExportMarkdown}>{markdownLabel}</DropdownMenuItem>
+        <DropdownMenuItem onClick={onExportPdf}>Export as PDF</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+interface EditorViewProps {
+  onExportMarkdown: () => void
+  onExportPdf: () => void
+}
+
+export function EditorView({ onExportMarkdown, onExportPdf }: EditorViewProps) {
   const activeFile = useFileStore((state) => state.getActiveFile())
   const { saveFileContent, createNewFile, openFile } = useFileOperations()
   const [viewMode, setViewMode] = useState<ViewMode>('split')
@@ -121,29 +148,11 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
           {viewMode !== 'split' && (
             <div className="flex items-center gap-2">
               <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-              {isDesktop ? (
-                <Button variant="ghost" size="sm" className="h-7 px-3 text-xs" onClick={onExportPdf}>
-                  <FileOutput className="h-3.5 w-3.5 mr-1.5" />
-                  Export PDF
-                </Button>
-              ) : (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
-                      <Download className="h-3.5 w-3.5 mr-1.5" />
-                      Download
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={onDownloadMarkdown}>
-                      Download as Markdown
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onExportPdf}>
-                      Export as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              <ExportMenu
+                isDesktop={isDesktop}
+                onExportMarkdown={onExportMarkdown}
+                onExportPdf={onExportPdf}
+              />
             </div>
           )}
         </div>
@@ -178,29 +187,11 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
           {viewMode !== 'split' && (
             <div className="flex items-center gap-2">
               <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-              {isDesktop ? (
-                <Button variant="ghost" size="sm" className="h-7 px-3 text-xs" onClick={onExportPdf}>
-                  <FileOutput className="h-3.5 w-3.5 mr-1.5" />
-                  Export PDF
-                </Button>
-              ) : (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
-                      <Download className="h-3.5 w-3.5 mr-1.5" />
-                      Download
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={onDownloadMarkdown}>
-                      Download as Markdown
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onExportPdf}>
-                      Export as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              <ExportMenu
+                isDesktop={isDesktop}
+                onExportMarkdown={onExportMarkdown}
+                onExportPdf={onExportPdf}
+              />
             </div>
           )}
         </div>
@@ -269,22 +260,11 @@ export function EditorView({ onDownloadMarkdown, onExportPdf }: EditorViewProps)
               <h3 className="text-sm font-medium">Preview</h3>
               <div className="flex items-center gap-2">
                 <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 px-3 text-xs">
-                      <Download className="h-3.5 w-3.5 mr-1.5" />
-                      Download
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={onDownloadMarkdown}>
-                      Download as Markdown
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onExportPdf}>
-                      Export as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <ExportMenu
+                  isDesktop={isDesktop}
+                  onExportMarkdown={onExportMarkdown}
+                  onExportPdf={onExportPdf}
+                />
               </div>
             </div>
             <div className="flex-1 flex flex-col overflow-hidden">
