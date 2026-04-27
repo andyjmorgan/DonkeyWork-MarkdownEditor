@@ -9,7 +9,12 @@ export interface ExportPdfOptions {
   markdown: string
 }
 
-export async function exportToPdf({ filename = 'document.pdf', markdown }: ExportPdfOptions): Promise<void> {
+export interface RenderPdfOptions {
+  markdown: string
+  scale?: number
+}
+
+async function buildPdf({ markdown, scale = 2 }: RenderPdfOptions): Promise<jsPDF> {
   // Initialize mermaid with light theme
   mermaid.initialize({
     startOnLoad: false,
@@ -88,7 +93,7 @@ export async function exportToPdf({ filename = 'document.pdf', markdown }: Expor
 
     // Capture the content as canvas
     const canvas = await html2canvas(container, {
-      scale: 2, // Higher quality
+      scale,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
@@ -117,10 +122,19 @@ export async function exportToPdf({ filename = 'document.pdf', markdown }: Expor
       heightLeft -= pageHeight
     }
 
-    // Download the PDF
-    pdf.save(filename)
+    return pdf
   } finally {
     // Clean up
     document.body.removeChild(container)
   }
+}
+
+export async function exportToPdf({ filename = 'document.pdf', markdown }: ExportPdfOptions): Promise<void> {
+  const pdf = await buildPdf({ markdown })
+  pdf.save(filename)
+}
+
+export async function renderPdfBytes(options: RenderPdfOptions): Promise<Uint8Array> {
+  const pdf = await buildPdf(options)
+  return new Uint8Array(pdf.output('arraybuffer'))
 }

@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -75,6 +76,28 @@ async fn save_file_dialog(
     }
 }
 
+/// Save file dialog for PDF exports - returns the chosen path
+#[tauri::command]
+async fn save_pdf_dialog(
+    app: tauri::AppHandle,
+    default_name: String,
+) -> Result<Option<String>, String> {
+    let file_path = app
+        .dialog()
+        .file()
+        .add_filter("PDF", &["pdf"])
+        .set_file_name(&default_name)
+        .blocking_save_file();
+
+    match file_path {
+        Some(path) => {
+            let path_buf = path.into_path().map_err(|e| e.to_string())?;
+            Ok(Some(path_buf.to_string_lossy().to_string()))
+        }
+        None => Ok(None),
+    }
+}
+
 /// Read a file from disk
 #[tauri::command]
 async fn read_file(path: String) -> Result<FileResult, String> {
@@ -97,6 +120,16 @@ async fn read_file(path: String) -> Result<FileResult, String> {
 #[tauri::command]
 async fn write_file(path: String, content: String) -> Result<(), String> {
     fs::write(&path, &content).map_err(|e| e.to_string())
+}
+
+/// Write raw bytes to a file on disk (used for binary exports like PDF).
+/// Content is base64-encoded because Tauri v2's JSON IPC serializes byte arrays
+/// as number-per-token JSON, which is O(10x) overhead and blocks the UI thread
+/// for multi-megabyte payloads.
+#[tauri::command]
+async fn write_binary_file(path: String, content_base64: String) -> Result<(), String> {
+    let bytes = BASE64.decode(content_base64.as_bytes()).map_err(|e| e.to_string())?;
+    fs::write(&path, &bytes).map_err(|e| e.to_string())
 }
 
 /// Get the path to the recent files JSON
@@ -267,8 +300,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             open_file_dialog,
             save_file_dialog,
+            save_pdf_dialog,
             read_file,
             write_file,
+            write_binary_file,
             get_opened_file,
             get_recent_files,
             add_recent_file,
